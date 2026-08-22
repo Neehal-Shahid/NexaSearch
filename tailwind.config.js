@@ -10,32 +10,32 @@ export default {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
       },
       colors: {
-        background: '#F8F8F6',
+        background: '#FFFFFF',
         surface: {
           DEFAULT: '#FFFFFF',
-          secondary: '#F3F3F0',
+          secondary: '#F8FAFC', // Crisp very light slate
         },
-        'text-primary': '#111111',
-        'text-secondary': '#6B6B6B',
-        'text-muted': '#9CA3AF',
+        'text-primary': '#0F172A', // Slate 900
+        'text-secondary': '#475569', // Slate 600
+        'text-muted': '#94A3B8', // Slate 400
         border: {
-          DEFAULT: '#E5E5E0',
-          subtle: '#EBEBE6',
+          DEFAULT: '#E2E8F0', // Slate 200
+          subtle: '#F1F5F9', // Slate 100
         },
         primary: {
-          DEFAULT: '#0B1020',
-          hover: '#151D36',
+          DEFAULT: '#020617', // Slate 950
+          hover: '#1E293B', // Slate 800
         },
         accent: {
-          DEFAULT: '#1E3A8A',
-          hover: '#172554',
-          light: '#EFF6FF',
+          DEFAULT: '#2563EB', // Vibrant Blue 600
+          hover: '#1D4ED8', // Blue 700
+          light: '#EFF6FF', // Blue 50
         },
         signature: {
-          dark: '#0B1020',
+          dark: '#020617',
         },
-        success: '#16A34A',
-        danger: '#DC2626',
+        success: '#10B981',
+        danger: '#EF4444',
       },
     },
   },

@@ -5,10 +5,10 @@ function PAAItem({ item }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="border-b border-border-subtle last:border-0">
+    <div className="border-b border-border-subtle last:border-0 bg-white hover:bg-surface-secondary transition-colors duration-200">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-4 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-sm"
+        className="w-full flex items-center justify-between py-4 px-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent"
         aria-expanded={isOpen}
       >
         <span className="text-base font-medium text-text-primary">{item.question}</span>
@@ -24,7 +24,7 @@ function PAAItem({ item }) {
       </button>
       
       {isOpen && (
-        <div className="pb-4 animate-in fade-in slide-in-from-top-2 duration-200">
+        <div className="pb-4 px-5 animate-in fade-in slide-in-from-top-2 duration-200">
           <p className="text-sm text-text-secondary leading-relaxed mb-3">
             {item.snippet}
           </p>
@@ -52,8 +52,8 @@ export default function PeopleAlsoAsk({ questions }) {
 
   return (
     <section className="mt-8 pt-6 border-t border-border-subtle">
-      <h3 className="text-xl font-medium text-text-primary mb-4">People also ask</h3>
-      <div className="bg-surface rounded-xl border border-border-subtle px-4">
+      <h3 className="text-lg font-semibold text-text-primary mb-4">People also ask</h3>
+      <div className="bg-surface rounded-xl border border-border shadow-sm overflow-hidden">
         {questions.map((item, index) => (
           <PAAItem key={index} item={item} />
         ))}

@@ -16,17 +16,33 @@ html {
 
 body {
   font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  background-color: #F8F8F6;
-  color: #111111;
+  background-color: #FFFFFF;
+  color: #0F172A;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   line-height: 1.6;
 }
 
+/* ── Animations ──────────────────────────────────────── */
+
+@keyframes gradient-x {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 4s ease infinite;
+}
+
 /* ── Signature Visual ────────────────────────────────── */
 
 .bg-signature-pattern {
-  background-image: radial-gradient(#0B1020 1px, transparent 1px);
+  background-image: radial-gradient(#020617 1px, transparent 1px);
   background-size: 24px 24px;
   opacity: 0.03;
 }

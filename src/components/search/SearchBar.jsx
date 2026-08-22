@@ -23,10 +23,10 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
         Search the web
       </label>
       <div
-        className={`relative flex items-center w-full bg-white border transition-all duration-200 ${
+        className={`relative flex items-center w-full bg-white border transition-all duration-300 ${
           isHero
-            ? 'border-border rounded-2xl shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-text-muted'
-            : 'border-border rounded-xl hover:border-text-muted focus-within:border-text-muted'
+            ? 'border-border rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] focus-within:shadow-[0_8px_30px_rgb(0,0,0,0.08)] focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10'
+            : 'border-border rounded-xl shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10'
         }`}
       >
         <svg
