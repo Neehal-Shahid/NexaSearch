@@ -5,6 +5,7 @@ import Footer from './components/layout/Footer';
 import { SavedResultsProvider } from './context/SavedResultsContext';
 import { SearchHistoryProvider } from './context/SearchHistoryContext';
 import HomePage from './pages/HomePage';
+import CommandPalette from './components/search/CommandPalette';
 
 // Lazy-load secondary pages for smaller initial bundle
 const SearchPage = lazy(() => import('./pages/SearchPage'));
@@ -37,6 +38,7 @@ export default function App() {
           </a>
 
           <div className="min-h-screen flex flex-col" id="main-content">
+            <CommandPalette />
             <Header />
 
             <Suspense fallback={<PageLoader />}>

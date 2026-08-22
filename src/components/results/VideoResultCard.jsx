@@ -5,21 +5,21 @@ export default function VideoResultCard({ result }) {
   const thumbnail = result.thumbnail?.static || result.thumbnail;
 
   return (
-    <article className="group">
+    <article className="group flex flex-col h-full bg-surface rounded-xl border border-border-subtle hover:border-border hover:shadow-md transition-all duration-300 overflow-hidden">
       <a
         href={result.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded-lg"
+        className="block flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {/* Thumbnail */}
-        <div className="relative aspect-video rounded-lg overflow-hidden bg-surface-secondary mb-2.5">
+        <div className="relative aspect-video overflow-hidden bg-surface-secondary border-b border-border-subtle">
           {thumbnail && (
             <img
               src={thumbnail}
               alt={result.title || 'Video thumbnail'}
               loading="lazy"
-              className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
               onError={(e) => {
                 e.target.style.display = 'none';
               }}
@@ -28,15 +28,15 @@ export default function VideoResultCard({ result }) {
 
           {/* Duration badge */}
           {result.length && (
-            <span className="absolute bottom-2 right-2 px-1.5 py-0.5 text-[11px] font-medium text-white bg-black/80 rounded">
+            <span className="absolute bottom-2 right-2 px-2 py-1 text-[10px] tracking-wider font-bold text-white bg-black/80 rounded backdrop-blur-sm">
               {formatDuration(result.length)}
             </span>
           )}
 
           {/* Play icon overlay */}
-          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <div className="w-12 h-12 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm">
-              <svg className="w-5 h-5 text-white ml-0.5" fill="currentColor" viewBox="0 0 24 24">
+          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            <div className="w-14 h-14 flex items-center justify-center rounded-full bg-black/60 backdrop-blur-sm border border-white/20">
+              <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M8 5.14v14l11-7-11-7z" />
               </svg>
             </div>
@@ -44,25 +44,27 @@ export default function VideoResultCard({ result }) {
         </div>
 
         {/* Info */}
-        <h3 className="text-sm font-medium text-text-primary leading-snug line-clamp-2 group-hover:text-accent transition-colors">
-          {result.title}
-        </h3>
+        <div className="p-4">
+          <h3 className="text-base font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+            {result.title}
+          </h3>
 
-        <div className="flex items-center gap-2 mt-1">
-          {result.channel && (
-            <span className="text-xs text-text-secondary">{result.channel}</span>
-          )}
-          {result.date && (
-            <>
-              <span className="text-text-muted text-xs">·</span>
-              <span className="text-xs text-text-muted">{result.date}</span>
-            </>
-          )}
+          <div className="flex items-center gap-2 mt-3">
+            {result.channel && (
+              <span className="text-xs font-semibold tracking-wide text-text-primary uppercase truncate">{result.channel}</span>
+            )}
+            {result.date && (
+              <>
+                <span className="text-border text-xs shrink-0">|</span>
+                <span className="text-xs text-text-muted font-medium shrink-0">{result.date}</span>
+              </>
+            )}
+          </div>
         </div>
       </a>
 
       {/* Save button */}
-      <div className="flex justify-end mt-1">
+      <div className="px-4 pb-4 pt-2 flex justify-end mt-auto border-t border-border-subtle/50">
         <SaveButton result={result} type="video" size="sm" />
       </div>
     </article>

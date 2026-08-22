@@ -1,15 +1,14 @@
 import SaveButton from '../ui/SaveButton';
 
-export default function ImageResultCard({ result }) {
+export default function ImageResultCard({ result, onClick }) {
   const imageUrl = result.thumbnail || result.original;
 
   return (
     <div className="group relative rounded-lg overflow-hidden bg-surface-secondary">
-      <a
-        href={result.original || result.link}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset"
+      <button
+        onClick={onClick}
+        type="button"
+        className="w-full text-left block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset cursor-zoom-in"
       >
         <img
           src={imageUrl}
@@ -20,7 +19,7 @@ export default function ImageResultCard({ result }) {
             e.target.parentElement.parentElement.style.display = 'none';
           }}
         />
-      </a>
+      </button>
 
       {/* Overlay with info */}
       <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
