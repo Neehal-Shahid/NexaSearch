@@ -3,7 +3,7 @@ const ShimmerBlock = ({ className = '', style = {} }) => (
     className={`relative overflow-hidden bg-slate-100/80 rounded-md ${className}`}
     style={style}
   >
-    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-blue-500/10 to-transparent animate-smart-shimmer" />
+    <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-slate-400/15 to-transparent animate-smart-shimmer" />
   </div>
 );
 

@@ -14,11 +14,11 @@ export default function HomePage() {
         {/* Hero */}
         <div className="text-center mb-12 flex flex-col items-center">
           <Logo size="lg" className="justify-center mb-6" />
-          <h1 className="text-4xl md:text-5xl font-extrabold text-text-primary tracking-tight mb-4 leading-tight">
+          <h1 className="text-4xl md:text-5xl font-bold text-text-primary tracking-tight mb-4 leading-tight">
             Search the world, <br className="hidden sm:block" />
-            <span className="text-brand-gradient">beyond the obvious.</span>
+            <span className="text-text-secondary">beyond the obvious.</span>
           </h1>
-          <p className="text-text-secondary text-lg max-w-lg font-medium">
+          <p className="text-text-muted text-lg max-w-lg font-medium">
             Discover answers, stories, images, and ideas from across the web.
           </p>
         </div>

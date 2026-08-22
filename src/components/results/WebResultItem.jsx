@@ -29,7 +29,7 @@ export default function WebResultItem({ result }) {
             href={result.link}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-lg font-semibold text-text-primary hover:text-accent transition-colors duration-150 line-clamp-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:rounded leading-tight"
+            className="text-lg font-semibold text-text-primary hover:underline transition-all duration-150 line-clamp-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:rounded leading-tight"
           >
             {result.title}
           </a>

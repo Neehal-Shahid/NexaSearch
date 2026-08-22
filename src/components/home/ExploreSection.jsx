@@ -42,7 +42,7 @@ export default function ExploreSection() {
           <button
             key={topic.id}
             onClick={() => handleTopicClick(topic.query)}
-            className="group flex flex-col items-start p-6 rounded-2xl bg-surface hover:bg-gradient-to-br hover:from-[#0A1A2D] hover:via-[#162A45] hover:to-[#2A5EE8] hover:text-white hover:shadow-[0_8px_30px_rgb(42,94,232,0.15)] hover:-translate-y-1 border border-border hover:border-transparent transition-all duration-300 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+            className="group flex flex-col items-start p-6 rounded-2xl bg-surface hover:bg-primary hover:text-white hover:shadow-[0_4px_20px_rgb(0,0,0,0.08)] hover:-translate-y-0.5 border border-border hover:border-transparent transition-all duration-300 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           >
             <span className="text-xs font-bold opacity-60 mb-4">{topic.id}</span>
             <span className="text-sm font-semibold uppercase tracking-wider mb-1">{topic.category}</span>

@@ -25,12 +25,14 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
       <div
         className={`relative flex items-center w-full bg-white border transition-all duration-300 ${
           isHero
-            ? 'border-border rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] focus-within:shadow-[0_8px_30px_rgb(0,0,0,0.08)] focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10'
-            : 'border-border rounded-xl shadow-sm hover:shadow-md focus-within:shadow-md focus-within:border-accent/50 focus-within:ring-4 focus-within:ring-accent/10'
+            ? 'border-border rounded-2xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_4px_20px_rgb(0,0,0,0.04)] focus-within:shadow-[0_4px_20px_rgb(0,0,0,0.04)] focus-within:border-text-muted focus-within:ring-1 focus-within:ring-text-muted'
+            : 'border-border rounded-xl shadow-[0_2px_10px_rgb(0,0,0,0.02)] hover:shadow-[0_2px_15px_rgb(0,0,0,0.03)] focus-within:shadow-[0_2px_15px_rgb(0,0,0,0.03)] focus-within:border-text-muted focus-within:ring-1 focus-within:ring-text-muted'
         }`}
       >
         <svg
-          className={`shrink-0 text-text-muted ${isHero ? 'w-5 h-5 ml-5' : 'w-[18px] h-[18px] ml-4'}`}
+          className={`absolute left-4 text-text-muted transition-colors duration-200 ${
+            isHero ? 'w-5 h-5' : 'w-4 h-4'
+          }`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -44,18 +46,19 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search the web..."
+          placeholder="Search..."
           autoFocus={autoFocus}
           autoComplete="off"
-          className={`flex-1 bg-transparent border-none outline-none text-text-primary placeholder:text-text-muted ${
-            isHero ? 'py-4 px-4 text-base' : 'py-3 px-3 text-sm'
+          spellCheck="false"
+          className={`w-full bg-transparent border-none focus:ring-0 text-text-primary placeholder:text-text-muted focus-visible:outline-none ${
+            isHero ? 'py-4 pl-12 pr-32 text-lg' : 'py-2.5 pl-10 pr-24 text-sm'
           }`}
         />
         {query.length > 0 && (
           <button
             type="button"
             onClick={() => setQuery('')}
-            className="shrink-0 p-2 mr-1 text-text-muted hover:text-text-secondary transition-colors rounded-lg"
+            className="absolute right-20 shrink-0 p-2 text-text-muted hover:text-text-secondary transition-colors rounded-lg"
             aria-label="Clear search"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -66,8 +69,8 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
         <button
           type="submit"
           disabled={query.trim().length === 0}
-          className={`shrink-0 font-bold text-white bg-brand-gradient rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-            isHero ? 'px-8 py-3 mr-2 text-sm shadow-md' : 'px-5 py-2 mr-1.5 text-xs shadow-sm'
+          className={`shrink-0 font-medium text-white bg-primary rounded-xl transition-all duration-300 hover:bg-primary-hover active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            isHero ? 'px-8 py-3 mr-2 text-sm' : 'px-5 py-2 mr-1.5 text-xs'
           }`}
         >
           Search

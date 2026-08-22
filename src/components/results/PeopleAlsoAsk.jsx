@@ -11,12 +11,12 @@ function PAAItem({ item }) {
     <div className="border-b border-border-subtle last:border-0 bg-white hover:bg-surface-secondary transition-colors duration-200">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full flex items-center justify-between py-4 px-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-accent group"
+        className="w-full flex items-center justify-between py-4 px-5 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary group"
         aria-expanded={isOpen}
       >
-        <span className={`text-base font-medium transition-colors ${isOpen ? 'text-brand-gradient' : 'text-text-primary group-hover:text-accent'}`}>{item.question}</span>
+        <span className={`text-base font-medium transition-colors ${isOpen ? 'text-primary' : 'text-text-primary group-hover:text-primary'}`}>{item.question}</span>
         <svg
-          className={`w-5 h-5 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-accent' : 'text-text-muted group-hover:text-accent'}`}
+          className={`w-5 h-5 transition-transform duration-200 shrink-0 ${isOpen ? 'rotate-180 text-primary' : 'text-text-muted group-hover:text-primary'}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"
@@ -40,7 +40,7 @@ function PAAItem({ item }) {
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-xs font-medium text-accent hover:text-accent-hover transition-colors truncate"
+                    className="text-xs font-medium text-primary hover:underline transition-all truncate"
                   >
                     {item.title || item.displayed_link || item.link}
                   </a>
@@ -51,7 +51,7 @@ function PAAItem({ item }) {
             <div className="pt-2">
               <a 
                 href={`/search?q=${encodeURIComponent(item.question)}&type=web`}
-                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-brand-gradient rounded-lg hover:opacity-90 transition-opacity"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors"
               >
                 Search for this question
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>

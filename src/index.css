@@ -47,12 +47,8 @@ body {
 /* ── Animations ──────────────────────────────────────── */
 
 @keyframes gradient-x {
-  0%, 100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
 }
 
 .animate-gradient-x {
@@ -74,27 +70,19 @@ body {
 
 @layer utilities {
   .bg-brand-gradient {
-    background-image: linear-gradient(135deg, #0A1A2D 0%, #162A45 10%, #2A5EE8 100%);
+    background-image: linear-gradient(to bottom right, #171717, #0A0A0A);
   }
-
   .text-brand-gradient {
-    background-image: linear-gradient(135deg, #0A1A2D 0%, #162A45 10%, #2A5EE8 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-
-  .border-brand-gradient {
-    border-image: linear-gradient(135deg, #0A1A2D 0%, #162A45 10%, #2A5EE8 100%) 1;
+    color: #0A0A0A;
   }
 }
 
 /* ── Signature Visual ────────────────────────────────── */
 
 .bg-signature-pattern {
-  background-image: radial-gradient(#020617 1px, transparent 1px);
+  background-image: radial-gradient(#000000 1px, transparent 1px);
   background-size: 24px 24px;
-  opacity: 0.03;
+  opacity: 0.02;
 }
 
 /* ── Accessibility ───────────────────────────────────── */

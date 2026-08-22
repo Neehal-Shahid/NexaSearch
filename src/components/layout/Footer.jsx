@@ -4,9 +4,6 @@ import Logo from '../ui/Logo';
 export default function Footer() {
   return (
     <footer className="w-full bg-white border-t border-border mt-auto relative overflow-hidden">
-      {/* Subtle brand gradient top accent */}
-      <div className="absolute top-0 inset-x-0 h-[2px] bg-brand-gradient opacity-80" />
-      
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-12 md:py-16">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10 md:gap-8">
           
@@ -30,17 +27,17 @@ export default function Footer() {
             <div>
               <h4 className="text-xs font-bold text-text-primary uppercase tracking-widest mb-4">Platform</h4>
               <ul className="space-y-3">
-                <li><Link to="/" className="text-sm text-text-secondary hover:text-accent hover:translate-x-1 inline-block transition-all duration-200">Search</Link></li>
-                <li><Link to="/saved" className="text-sm text-text-secondary hover:text-accent hover:translate-x-1 inline-block transition-all duration-200">Collections</Link></li>
-                <li><Link to="/history" className="text-sm text-text-secondary hover:text-accent hover:translate-x-1 inline-block transition-all duration-200">History</Link></li>
+                <li><Link to="/" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Search</Link></li>
+                <li><Link to="/saved" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Collections</Link></li>
+                <li><Link to="/history" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">History</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="text-xs font-bold text-text-primary uppercase tracking-widest mb-4">Company</h4>
               <ul className="space-y-3">
-                <li><Link to="/about" className="text-sm text-text-secondary hover:text-accent hover:translate-x-1 inline-block transition-all duration-200">About Nexa</Link></li>
-                <li><a href="#" className="text-sm text-text-secondary hover:text-accent hover:translate-x-1 inline-block transition-all duration-200">Privacy Policy</a></li>
-                <li><a href="#" className="text-sm text-text-secondary hover:text-accent hover:translate-x-1 inline-block transition-all duration-200">Terms of Service</a></li>
+                <li><Link to="/about" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">About Nexa</Link></li>
+                <li><a href="#" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Privacy Policy</a></li>
+                <li><a href="#" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Terms of Service</a></li>
               </ul>
             </div>
           </div>
@@ -52,15 +49,15 @@ export default function Footer() {
               href="https://serpapi.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="group flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-border-subtle hover:border-accent/30 hover:shadow-md transition-all duration-300 w-full sm:w-auto"
+              className="group flex items-center gap-3 p-3 rounded-xl bg-surface-secondary border border-border-subtle hover:border-border hover:shadow-sm transition-all duration-300 w-full sm:w-auto"
             >
-              <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0">
-                <svg className="w-4 h-4 text-accent" viewBox="0 0 24 24" fill="currentColor">
+              <div className="w-8 h-8 rounded-lg bg-white shadow-sm flex items-center justify-center shrink-0 border border-border-subtle">
+                <svg className="w-4 h-4 text-primary" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
                 </svg>
               </div>
               <div className="text-left">
-                <p className="text-sm font-bold text-text-primary group-hover:text-brand-gradient transition-colors">SerpAPI</p>
+                <p className="text-sm font-bold text-text-primary group-hover:text-primary transition-colors">SerpAPI</p>
                 <p className="text-[10px] text-text-muted font-medium uppercase tracking-wider">Data Provider</p>
               </div>
             </a>
