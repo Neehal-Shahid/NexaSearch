@@ -2,8 +2,9 @@ import { formatDate, truncateText } from '../../utils/formatters';
 import SaveButton from '../ui/SaveButton';
 
 export default function NewsResultCard({ result }) {
-  const imageUrl = result.thumbnail;
+  const imageUrl = result.thumbnail || result.source?.icon;
   const source = result.source?.name || result.source;
+  const snippet = result.snippet || result.highlight;
 
   return (
     <article className="group rounded-xl border border-border-subtle overflow-hidden transition-all duration-200 hover:border-border hover:shadow-sm">
@@ -46,9 +47,9 @@ export default function NewsResultCard({ result }) {
           </h3>
 
           {/* Snippet */}
-          {result.snippet && (
+          {snippet && (
             <p className="mt-1.5 text-xs text-text-secondary leading-relaxed line-clamp-2">
-              {truncateText(result.snippet, 120)}
+              {truncateText(snippet, 120)}
             </p>
           )}
         </div>

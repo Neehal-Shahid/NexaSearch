@@ -30,7 +30,7 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
         }`}
       >
         <svg
-          className={`shrink-0 text-text-muted ${isHero ? 'w-5 h-5 ml-5' : 'w-4.5 h-4.5 ml-4'}`}
+          className={`shrink-0 text-text-muted ${isHero ? 'w-5 h-5 ml-5' : 'w-[18px] h-[18px] ml-4'}`}
           fill="none"
           viewBox="0 0 24 24"
           stroke="currentColor"

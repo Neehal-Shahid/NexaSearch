@@ -43,16 +43,30 @@ export default function SearchPage() {
   }, [query]);
 
   // Determine which results to show based on search type
+  // Each SerpAPI engine returns data in a slightly different shape
   const getResults = () => {
     if (!data) return null;
 
     switch (type) {
       case 'images':
         return data.images_results;
-      case 'news':
-        return data.news_results;
+      case 'news': {
+        // Google News API nests articles inside topic groups with a `stories` array
+        const newsResults = data.news_results;
+        if (!newsResults) return null;
+        // Flatten: if items have stories sub-array, pull them out
+        const flat = [];
+        for (const item of newsResults) {
+          if (item.stories) {
+            flat.push(...item.stories);
+          } else {
+            flat.push(item);
+          }
+        }
+        return flat.length > 0 ? flat : newsResults;
+      }
       case 'videos':
-        return data.video_results;
+        return data.video_results || data.inline_videos;
       default:
         return data.organic_results;
     }
