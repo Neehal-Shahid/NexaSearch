@@ -15,12 +15,12 @@ export default function NexaOverview({ data }) {
   const hasMore = blocks.length > 2;
 
   return (
-    <div className="relative mb-8 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-border overflow-hidden">
+    <div className="relative mb-8 rounded-2xl bg-white shadow-[0_8px_30px_rgb(0,0,0,0.06)] border border-border overflow-hidden">
       {/* Animated gradient top border */}
-      <div className="absolute top-0 inset-x-0 h-1 bg-gradient-to-r from-blue-500 via-purple-500 to-emerald-500 animate-gradient-x" />
+      <div className="absolute top-0 inset-x-0 h-1.5 bg-brand-gradient animate-gradient-x" />
       
       {/* Subtle background glow */}
-      <div className="absolute top-0 right-0 w-96 h-96 bg-blue-50/50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" aria-hidden="true" />
+      <div className="absolute top-0 right-0 w-96 h-96 bg-[#2A5EE8]/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" aria-hidden="true" />
       
       <div className="relative p-6 sm:p-8 z-10">
         <div className="flex items-center gap-3 mb-6 border-b border-border-subtle pb-4">

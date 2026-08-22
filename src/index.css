@@ -39,6 +39,23 @@ body {
   animation: gradient-x 4s ease infinite;
 }
 
+/* ── Brand Gradients ────────────────────────────────── */
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, #0A1A2D 0%, #162A45 10%, #2A5EE8 100%);
+}
+
+.text-brand-gradient {
+  background: linear-gradient(135deg, #0A1A2D 0%, #162A45 10%, #2A5EE8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.border-brand-gradient {
+  border-image: linear-gradient(135deg, #0A1A2D 0%, #162A45 10%, #2A5EE8 100%) 1;
+}
+
 /* ── Signature Visual ────────────────────────────────── */
 
 .bg-signature-pattern {

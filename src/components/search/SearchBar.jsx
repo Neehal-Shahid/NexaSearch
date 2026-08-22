@@ -66,8 +66,8 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
         <button
           type="submit"
           disabled={query.trim().length === 0}
-          className={`shrink-0 font-medium text-white bg-primary rounded-xl transition-all duration-200 hover:bg-primary-hover disabled:opacity-40 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
-            isHero ? 'px-6 py-2.5 mr-2 text-sm' : 'px-4 py-2 mr-1.5 text-xs'
+          className={`shrink-0 font-bold text-white bg-brand-gradient rounded-xl transition-all duration-300 hover:opacity-90 hover:scale-105 active:scale-95 disabled:opacity-40 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${
+            isHero ? 'px-8 py-3 mr-2 text-sm shadow-md' : 'px-5 py-2 mr-1.5 text-xs shadow-sm'
           }`}
         >
           Search
