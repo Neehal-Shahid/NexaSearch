@@ -1,0 +1,34 @@
+import { Link } from 'react-router-dom';
+
+export default function Logo({ size = 'md', className = '' }) {
+  const sizes = {
+    sm: 'text-lg',
+    md: 'text-xl',
+    lg: 'text-4xl md:text-5xl',
+  };
+
+  return (
+    <Link
+      to="/"
+      className={`inline-flex items-center gap-2 font-bold tracking-tight text-primary no-underline select-none ${sizes[size]} ${className}`}
+      aria-label="Nexa — Home"
+    >
+      <svg
+        viewBox="0 0 32 32"
+        fill="none"
+        className={size === 'lg' ? 'w-9 h-9' : size === 'md' ? 'w-6 h-6' : 'w-5 h-5'}
+        aria-hidden="true"
+      >
+        <rect width="32" height="32" rx="6" fill="currentColor" />
+        <path
+          d="M9 24V8l7 8 7-8v16"
+          stroke="white"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+      <span>NEXA</span>
+    </Link>
+  );
+}
