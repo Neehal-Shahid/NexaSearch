@@ -23,13 +23,13 @@ export default {
           subtle: '#F5F5F5', // Neutral 100
         },
         primary: {
-          DEFAULT: '#0A0A0A',
-          hover: '#262626', // Neutral 800
+          DEFAULT: '#003747',
+          hover: '#002430',
         },
         accent: {
-          DEFAULT: '#0A0A0A', // Black accent for ultimate minimalism
-          hover: '#404040', 
-          light: '#F5F5F5',
+          DEFAULT: '#003747', 
+          hover: '#004c63', 
+          light: '#e6ebee',
         },
         signature: {
           dark: '#000000',

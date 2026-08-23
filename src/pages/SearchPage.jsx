@@ -7,8 +7,10 @@ import WebResultList from '../components/results/WebResultList';
 import ImageResultGrid from '../components/results/ImageResultGrid';
 import NewsResultList from '../components/results/NewsResultList';
 import VideoResultGrid from '../components/results/VideoResultGrid';
+import ShoppingResultGrid from '../components/results/ShoppingResultGrid';
 import KnowledgePanel from '../components/results/KnowledgePanel';
 import RelatedSearches from '../components/results/RelatedSearches';
+import LocalResults from '../components/results/LocalResults';
 import NexaOverview from '../components/results/NexaOverview';
 import AnswerBox from '../components/results/AnswerBox';
 import PeopleAlsoAsk from '../components/results/PeopleAlsoAsk';
@@ -85,6 +87,8 @@ export default function SearchPage() {
       }
       case 'videos':
         return data.video_results || data.inline_videos;
+      case 'shopping':
+        return data.shopping_results;
       default:
         return data.organic_results;
     }
@@ -97,6 +101,7 @@ export default function SearchPage() {
   const answerBox = type === 'web' ? data?.answer_box : null;
   const peopleAlsoAsk = type === 'web' ? data?.related_questions : null;
   const searchInfo = data?.search_information;
+  const localResults = type === 'web' ? data?.local_results?.places || data?.local_results : null;
 
   // No query provided
   if (!query) {
@@ -166,10 +171,15 @@ export default function SearchPage() {
                       </>
                     )}
 
+                    {type === 'web' && localResults && (
+                      <LocalResults results={localResults} />
+                    )}
+
                     {type === 'web' && <WebResultList results={results} />}
                     {type === 'images' && <ImageResultGrid results={results} />}
                     {type === 'news' && <NewsResultList results={results} />}
                     {type === 'videos' && <VideoResultGrid results={results} />}
+                    {type === 'shopping' && <ShoppingResultGrid results={results} />}
 
                     {/* People Also Ask (web only) */}
                     {type === 'web' && peopleAlsoAsk && (

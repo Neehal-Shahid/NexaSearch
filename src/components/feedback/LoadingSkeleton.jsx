@@ -98,5 +98,25 @@ export default function LoadingSkeleton({ type = 'web', count = 6 }) {
     );
   }
 
+  if (type === 'shopping') {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6 animate-in fade-in duration-500" role="status" aria-label="Processing shopping results...">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="flex flex-col bg-white rounded-xl border border-border-subtle overflow-hidden">
+            <ShimmerBlock className="aspect-square w-full rounded-none" />
+            <div className="p-4 space-y-2">
+              <ShimmerBlock className="h-4 w-full" />
+              <ShimmerBlock className="h-4 w-3/4" />
+              <div className="pt-2">
+                <ShimmerBlock className="h-5 w-20" />
+              </div>
+            </div>
+          </div>
+        ))}
+        <span className="sr-only">Processing shopping results...</span>
+      </div>
+    );
+  }
+
   return null;
 }

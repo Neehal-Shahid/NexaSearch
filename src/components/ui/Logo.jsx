@@ -19,7 +19,7 @@ export default function Logo({ size = 'md', className = '' }) {
         className={size === 'lg' ? 'w-10 h-10' : size === 'md' ? 'w-6 h-6' : 'w-5 h-5'}
         aria-hidden="true"
       >
-        <rect width="32" height="32" rx="8" fill="currentColor" className="text-primary" />
+        <rect width="32" height="32" rx="8" fill="currentColor" className="text-accent" />
         <path
           d="M9 24V8l7 8 7-8v16"
           stroke="white"
@@ -28,7 +28,7 @@ export default function Logo({ size = 'md', className = '' }) {
           strokeLinejoin="round"
         />
       </svg>
-      <span className="text-primary">NEXA</span>
+      <span className="text-text-primary">NEXA</span>
     </Link>
   );
 }

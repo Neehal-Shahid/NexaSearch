@@ -4,12 +4,14 @@ export const SEARCH_TYPES = {
   IMAGES: 'images',
   NEWS: 'news',
   VIDEOS: 'videos',
+  SHOPPING: 'shopping',
 };
 
 // Tab configuration for SearchTabs component
 export const SEARCH_TABS = [
   { key: SEARCH_TYPES.WEB, label: 'All' },
   { key: SEARCH_TYPES.IMAGES, label: 'Images' },
+  { key: SEARCH_TYPES.SHOPPING, label: 'Shopping' },
   { key: SEARCH_TYPES.NEWS, label: 'News' },
   { key: SEARCH_TYPES.VIDEOS, label: 'Videos' },
 ];

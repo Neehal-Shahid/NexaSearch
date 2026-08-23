@@ -45,7 +45,7 @@ export default function VideoResultCard({ result }) {
 
         {/* Info */}
         <div className="p-4">
-          <h3 className="text-base font-semibold text-text-primary leading-snug line-clamp-2 group-hover:text-accent transition-colors">
+          <h3 className="text-base font-semibold text-accent leading-snug line-clamp-2 transition-transform duration-200 group-hover:scale-[1.015] origin-left">
             {result.title}
           </h3>
 

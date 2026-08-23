@@ -8,6 +8,7 @@ const ENGINE_MAP = {
   images: 'google_images',
   news: 'google_news',
   videos: 'google_videos',
+  shopping: 'google_shopping',
 };
 
 export default async function handler(req, res) {
@@ -25,7 +26,7 @@ export default async function handler(req, res) {
 
   const engine = ENGINE_MAP[type];
   if (!engine) {
-    return res.status(400).json({ error: `Invalid search type: ${type}. Use: web, images, news, videos` });
+    return res.status(400).json({ error: `Invalid search type: ${type}. Use: web, images, news, videos, shopping` });
   }
 
   const apiKey = process.env.SERPAPI_KEY;

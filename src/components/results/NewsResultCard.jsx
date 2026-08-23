@@ -42,7 +42,7 @@ export default function NewsResultCard({ result }) {
           </div>
 
           {/* Title */}
-          <h3 className="text-base font-semibold text-text-primary leading-snug line-clamp-3 group-hover:text-accent transition-colors">
+          <h3 className="text-base font-semibold text-accent leading-snug line-clamp-3 transition-transform duration-200 group-hover:scale-[1.015] origin-left">
             {result.title}
           </h3>
 

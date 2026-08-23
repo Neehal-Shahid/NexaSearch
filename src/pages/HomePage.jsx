@@ -16,7 +16,7 @@ export default function HomePage() {
           <Logo size="lg" className="justify-center mb-6" />
           <h1 className="text-4xl md:text-5xl font-bold text-text-primary tracking-tight mb-4 leading-tight">
             Search the world, <br className="hidden sm:block" />
-            <span className="text-text-primary/70">beyond the obvious.</span>
+            <span className="text-accent">beyond the obvious.</span>
           </h1>
           <p className="text-text-secondary text-lg max-w-lg font-medium">
             Discover answers, stories, images, and ideas from across the web.
