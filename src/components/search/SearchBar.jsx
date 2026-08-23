@@ -1,24 +1,52 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchHistory } from '../../context/SearchHistoryContext';
 
 export default function SearchBar({ variant = 'hero', autoFocus = false }) {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
+  const [isFocused, setIsFocused] = useState(false);
+  const containerRef = useRef(null);
+  const { history } = useSearchHistory();
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setIsFocused(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     const trimmed = query.trim();
     if (trimmed.length === 0) return;
 
+    setIsFocused(false);
     const type = searchParams.get('type') || 'web';
     navigate(`/search?q=${encodeURIComponent(trimmed)}&type=${type}&page=1`);
   };
 
+  const handleSuggestionClick = (suggestion) => {
+    setQuery(suggestion);
+    setIsFocused(false);
+    const type = searchParams.get('type') || 'web';
+    navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${type}&page=1`);
+  };
+
   const isHero = variant === 'hero';
 
+  // Get unique history queries
+  const uniqueHistory = Array.from(new Set(history.map(h => h.query)));
+  const suggestions = query.trim()
+    ? uniqueHistory.filter(q => q.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 5)
+    : uniqueHistory.slice(0, 5);
+
   return (
-    <form onSubmit={handleSubmit} className="w-full" role="search">
+    <form onSubmit={handleSubmit} className="w-full relative" role="search" ref={containerRef}>
       <label htmlFor="search-input" className="sr-only">
         Search the web
       </label>
@@ -50,7 +78,11 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
           id="search-input"
           type="text"
           value={query}
-          onChange={(e) => setQuery(e.target.value)}
+          onChange={(e) => {
+            setQuery(e.target.value);
+            setIsFocused(true);
+          }}
+          onFocus={() => setIsFocused(true)}
           placeholder="Search..."
           autoFocus={autoFocus}
           autoComplete="off"
@@ -90,6 +122,34 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
           </button>
         </div>
       </div>
+
+      {/* Suggestions Dropdown */}
+      {isFocused && suggestions.length > 0 && (
+        <div className={`absolute left-0 right-0 z-50 bg-white border border-border-subtle rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 ${isHero ? 'top-[calc(100%+0.75rem)]' : 'top-[calc(100%+0.5rem)]'}`}>
+          <ul className="py-2">
+            {suggestions.map((suggestion, idx) => (
+              <li key={idx}>
+                <button
+                  type="button"
+                  onMouseDown={(e) => {
+                    // Prevent focus loss before click registers
+                    e.preventDefault();
+                  }}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className={`w-full text-left px-5 hover:bg-surface flex items-center gap-3 text-text-primary focus-visible:outline-none focus-visible:bg-surface transition-colors ${
+                    isHero ? 'py-3' : 'py-2.5'
+                  }`}
+                >
+                  <svg className={`text-text-muted shrink-0 ${isHero ? 'w-5 h-5' : 'w-4 h-4'}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span className={`font-medium ${isHero ? 'text-base' : 'text-sm'}`}>{suggestion}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </form>
   );
 }
