@@ -20,12 +20,12 @@ export default function Logo({ size = 'md', className = '' }) {
         aria-hidden="true"
       >
         <rect width="32" height="32" rx="8" fill="currentColor" className="text-accent" />
+        <circle cx="14" cy="14" r="6" stroke="white" strokeWidth="2.5" />
         <path
-          d="M9 24V8l7 8 7-8v16"
+          d="M18.24 18.24L24 24"
           stroke="white"
           strokeWidth="3"
           strokeLinecap="round"
-          strokeLinejoin="round"
         />
       </svg>
       <span className="text-text-primary">NEXA</span>

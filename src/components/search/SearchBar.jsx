@@ -7,17 +7,31 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
   const [searchParams] = useSearchParams();
   const [query, setQuery] = useState(searchParams.get('q') || '');
   const [isFocused, setIsFocused] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const containerRef = useRef(null);
-  const { history } = useSearchHistory();
+  const inputRef = useRef(null);
+  const { history, removeQueryFromHistory } = useSearchHistory();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
         setIsFocused(false);
+        setSelectedIndex(-1);
+      }
+    };
+    const handleGlobalKeyDown = (event) => {
+      // Focus search bar when '/' is pressed outside of any input
+      if (event.key === '/' && document.activeElement?.tagName !== 'INPUT' && document.activeElement?.tagName !== 'TEXTAREA') {
+        event.preventDefault();
+        inputRef.current?.focus();
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleGlobalKeyDown);
+    };
   }, []);
 
   const handleSubmit = (e) => {
@@ -37,6 +51,12 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
     navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${type}&page=1`);
   };
 
+  const handleRemoveSuggestion = (e, suggestion) => {
+    e.preventDefault();
+    e.stopPropagation(); // Prevent triggering the suggestion click
+    removeQueryFromHistory(suggestion);
+  };
+
   const isHero = variant === 'hero';
 
   // Get unique history queries
@@ -44,6 +64,24 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
   const suggestions = query.trim()
     ? uniqueHistory.filter(q => q.toLowerCase().includes(query.trim().toLowerCase())).slice(0, 5)
     : uniqueHistory.slice(0, 5);
+
+  const handleKeyDown = (e) => {
+    if (!isFocused || suggestions.length === 0) return;
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev < suggestions.length - 1 ? prev + 1 : 0));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev > 0 ? prev - 1 : suggestions.length - 1));
+    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+      e.preventDefault();
+      handleSuggestionClick(suggestions[selectedIndex]);
+    } else if (e.key === 'Escape') {
+      setIsFocused(false);
+      setSelectedIndex(-1);
+    }
+  };
 
   return (
     <form onSubmit={handleSubmit} className="w-full relative" role="search" ref={containerRef}>
@@ -75,14 +113,17 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
 
         {/* Input */}
         <input
+          ref={inputRef}
           id="search-input"
           type="text"
           value={query}
           onChange={(e) => {
             setQuery(e.target.value);
             setIsFocused(true);
+            setSelectedIndex(-1);
           }}
           onFocus={() => setIsFocused(true)}
+          onKeyDown={handleKeyDown}
           placeholder="Search..."
           autoFocus={autoFocus}
           autoComplete="off"
@@ -124,19 +165,16 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
       </div>
 
       {/* Suggestions Dropdown */}
-      {isFocused && suggestions.length > 0 && (
+      {isFocused && query.trim().length > 0 && suggestions.length > 0 && (
         <div className={`absolute left-0 right-0 z-50 bg-white border border-border-subtle rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 ${isHero ? 'top-[calc(100%+0.75rem)]' : 'top-[calc(100%+0.5rem)]'}`}>
           <ul className="py-2">
             {suggestions.map((suggestion, idx) => (
-              <li key={idx}>
+              <li key={idx} className={`group flex items-center transition-colors ${selectedIndex === idx ? 'bg-surface-secondary' : 'hover:bg-surface-secondary'}`}>
                 <button
                   type="button"
-                  onMouseDown={(e) => {
-                    // Prevent focus loss before click registers
-                    e.preventDefault();
-                  }}
+                  onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className={`w-full text-left px-5 hover:bg-surface flex items-center gap-3 text-text-primary focus-visible:outline-none focus-visible:bg-surface transition-colors ${
+                  className={`flex-1 text-left px-5 flex items-center gap-3 text-text-primary focus-visible:outline-none focus-visible:bg-surface-secondary ${
                     isHero ? 'py-3' : 'py-2.5'
                   }`}
                 >
@@ -144,6 +182,17 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span className={`font-medium ${isHero ? 'text-base' : 'text-sm'}`}>{suggestion}</span>
+                </button>
+                <button
+                  type="button"
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => handleRemoveSuggestion(e, suggestion)}
+                  className="p-2 mr-3 text-text-muted hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all focus-visible:opacity-100 focus-visible:outline-none focus-visible:text-red-500 rounded-lg"
+                  aria-label="Remove suggestion"
+                >
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
+                  </svg>
                 </button>
               </li>
             ))}

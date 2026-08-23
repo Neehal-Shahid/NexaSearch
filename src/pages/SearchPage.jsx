@@ -13,6 +13,7 @@ import RelatedSearches from '../components/results/RelatedSearches';
 import LocalResults from '../components/results/LocalResults';
 import NexaOverview from '../components/results/NexaOverview';
 import AnswerBox from '../components/results/AnswerBox';
+import SportsBox from '../components/results/SportsBox';
 import PeopleAlsoAsk from '../components/results/PeopleAlsoAsk';
 import Pagination from '../components/ui/Pagination';
 import LoadingSkeleton from '../components/feedback/LoadingSkeleton';
@@ -98,10 +99,21 @@ export default function SearchPage() {
   const hasNext = data?.serpapi_pagination?.next != null;
   const knowledgeGraph = type === 'web' ? data?.knowledge_graph : null;
   const relatedSearches = type === 'web' ? data?.related_searches : null;
-  const answerBox = type === 'web' ? data?.answer_box : null;
+  let answerBox = type === 'web' ? data?.answer_box : null;
+
+  // Portfolio Mock: If Google doesn't return a direct answer box for a translation query, 
+  // we can inject a mock one to showcase the translation UI component for the portfolio.
+  if (!answerBox && type === 'web' && query.toLowerCase().includes('translate') && query.toLowerCase().includes('urdu')) {
+    answerBox = {
+      type: "translation_result",
+      source: { language: "English", text: query.replace(/translate | to urdu| in urdu/gi, '').trim() || "Hello" },
+      target: { language: "Urdu", text: "ہیلو" }
+    };
+  }
   const peopleAlsoAsk = type === 'web' ? data?.related_questions : null;
   const searchInfo = data?.search_information;
   const localResults = type === 'web' ? data?.local_results?.places || data?.local_results : null;
+  const sportsResults = type === 'web' ? data?.sports_results : null;
 
   // No query provided
   if (!query) {
@@ -134,12 +146,14 @@ export default function SearchPage() {
         {/* Content area */}
         <div className="mt-8" aria-live="polite">
           {/* Search metadata */}
-          {searchInfo?.total_results && !loading && (
-            <p className="text-xs font-medium text-text-muted mb-6 tracking-wide">
-              ABOUT {Number(searchInfo.total_results).toLocaleString()} RESULTS
-              {searchInfo.time_taken_displayed && ` (${searchInfo.time_taken_displayed}S)`}
-            </p>
-          )}
+          {searchInfo?.total_results ? (
+            !loading && (
+              <p className="text-xs font-medium text-text-muted mb-6 tracking-wide">
+                ABOUT {Number(searchInfo.total_results).toLocaleString()} RESULTS
+                {searchInfo.time_taken_displayed && ` (${searchInfo.time_taken_displayed}S)`}
+              </p>
+            )
+          ) : null}
 
           {/* Loading state */}
           {loading && <LoadingSkeleton type={type} />}
@@ -163,16 +177,17 @@ export default function SearchPage() {
                     {/* Nexa Overview or Answer Box */}
                     {type === 'web' && (
                       <>
-                        {aiOverviewData ? (
-                          <NexaOverview data={aiOverviewData} />
-                        ) : answerBox ? (
-                          <AnswerBox data={answerBox} />
-                        ) : null}
+                        {answerBox && <AnswerBox data={answerBox} />}
+                        {aiOverviewData && <NexaOverview data={aiOverviewData} />}
                       </>
                     )}
 
                     {type === 'web' && localResults && (
                       <LocalResults results={localResults} />
+                    )}
+
+                    {type === 'web' && sportsResults && (
+                      <SportsBox data={sportsResults} />
                     )}
 
                     {type === 'web' && <WebResultList results={results} />}

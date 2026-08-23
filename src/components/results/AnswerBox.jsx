@@ -1,5 +1,16 @@
+import CurrencyConverterBox from './CurrencyConverterBox';
+import TranslationBox from './TranslationBox';
+
 export default function AnswerBox({ data }) {
   if (!data) return null;
+
+  if (data.type === 'currency_converter' && data.currency_converter) {
+    return <CurrencyConverterBox data={data} />;
+  }
+
+  if (data.type === 'translation_result' || (data.source && data.target)) {
+    return <TranslationBox data={data} />;
+  }
 
   return (
     <div className="bg-surface rounded-xl border border-border-subtle p-6 mb-6">

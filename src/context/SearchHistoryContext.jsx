@@ -36,6 +36,10 @@ export function SearchHistoryProvider({ children }) {
     setHistory((prev) => prev.filter((item) => item.id !== id));
   }, []);
 
+  const removeQueryFromHistory = useCallback((query) => {
+    setHistory((prev) => prev.filter((item) => item.query.toLowerCase() !== query.toLowerCase()));
+  }, []);
+
   const clearHistory = useCallback(() => {
     setHistory([]);
   }, []);
@@ -50,7 +54,7 @@ export function SearchHistoryProvider({ children }) {
 
   return (
     <SearchHistoryContext.Provider
-      value={{ history, addToHistory, removeFromHistory, clearHistory, getRecentSearches }}
+      value={{ history, addToHistory, removeFromHistory, removeQueryFromHistory, clearHistory, getRecentSearches }}
     >
       {children}
     </SearchHistoryContext.Provider>
