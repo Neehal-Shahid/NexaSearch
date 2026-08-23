@@ -1,44 +1,46 @@
 import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 
-const EXPLORE_TOPICS = [
-  {
-    id: '01',
-    category: 'Technology',
-    title: 'What is changing next?',
-    query: 'future of technology trends',
-  },
-  {
-    id: '02',
-    category: 'Design',
-    title: 'Ideas shaping the web.',
-    query: 'modern web design trends',
-  },
-  {
-    id: '03',
-    category: 'Science',
-    title: 'Understand the world.',
-    query: 'recent scientific discoveries',
-  },
-  {
-    id: '04',
-    category: 'Business',
-    title: 'What\'s moving markets?',
-    query: 'global market trends',
-  },
+const EXPLORE_TOPICS_POOL = [
+  { category: 'Technology', title: 'What is changing next?', query: 'future of technology trends' },
+  { category: 'Design', title: 'Ideas shaping the web.', query: 'modern web design trends' },
+  { category: 'Science', title: 'Understand the world.', query: 'recent scientific discoveries' },
+  { category: 'Business', title: 'What\'s moving markets?', query: 'global market trends' },
+  { category: 'Culture', title: 'Evolution of cinema.', query: 'evolution of global cinema' },
+  { category: 'Environment', title: 'Sustainable futures.', query: 'sustainable energy solutions' },
+  { category: 'Health', title: 'The science of longevity.', query: 'longevity and biotechnology advancements' },
+  { category: 'Philosophy', title: 'Ethics in the AI era.', query: 'ethics of artificial intelligence' },
+  { category: 'Space', title: 'Beyond our solar system.', query: 'James webb space telescope findings' },
+  { category: 'Architecture', title: 'Minimalism in spaces.', query: 'minimalist architecture modern' },
+  { category: 'Economy', title: 'Startups disrupting norms.', query: 'startups disrupting traditional industries' },
+  { category: 'History', title: 'Lost ancient cities.', query: 'recent archaeological discoveries ancient cities' },
 ];
 
 export default function ExploreSection() {
   const navigate = useNavigate();
+  const [topics, setTopics] = useState([]);
+
+  useEffect(() => {
+    // Randomly shuffle the pool and pick the top 4
+    const shuffled = [...EXPLORE_TOPICS_POOL].sort(() => 0.5 - Math.random());
+    const selected = shuffled.slice(0, 4).map((topic, index) => ({
+      ...topic,
+      id: `0${index + 1}`
+    }));
+    setTopics(selected);
+  }, []);
 
   const handleTopicClick = (query) => {
     navigate(`/search?q=${encodeURIComponent(query)}&type=web&page=1`);
   };
 
+  if (topics.length === 0) return null;
+
   return (
     <section className="w-full mt-24">
       <h2 className="text-xs font-semibold text-text-muted uppercase tracking-widest mb-6">Explore</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {EXPLORE_TOPICS.map((topic) => (
+        {topics.map((topic) => (
           <button
             key={topic.id}
             onClick={() => handleTopicClick(topic.query)}
