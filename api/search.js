@@ -52,13 +52,11 @@ export default async function handler(req, res) {
 
     // Use Vercel's automatic geolocation headers to provide accurate local results
     const city = req.headers['x-vercel-ip-city'];
-    const region = req.headers['x-vercel-ip-country-region'];
     const country = req.headers['x-vercel-ip-country'];
     
+    // We only pass the city name because SerpApi fails to resolve if we append abbreviations (like 'Karachi, SD').
     if (city) {
-      let locationStr = decodeURIComponent(city);
-      if (region) locationStr += `, ${decodeURIComponent(region)}`;
-      params.set('location', locationStr);
+      params.set('location', decodeURIComponent(city));
     }
     
     if (country) {
