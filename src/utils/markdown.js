@@ -30,7 +30,17 @@ export function parseMarkdown(text) {
   // 3. Parse bold: **text** -> <strong>text</strong>
   processedText = processedText.replace(/\*\*(.*?)\*\*/g, '<strong class="font-semibold text-accent">$1</strong>');
 
-  // 4. Parse lists, paragraphs, headings, and dividers
+  // 4. Parse italic: *text* -> <em>text</em>
+  processedText = processedText.replace(/\*([^*]+)\*/g, '<em class="italic">$1</em>');
+  processedText = processedText.replace(/_([^_]+)_/g, '<em class="italic">$1</em>');
+
+  // 5. Parse Links: [text](url) -> <a>text</a>
+  processedText = processedText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" class="text-accent hover:underline font-medium" target="_blank" rel="noopener noreferrer">$1</a>');
+
+  // 6. Parse Strikethrough: ~~text~~ -> <del>text</del>
+  processedText = processedText.replace(/~~(.*?)~~/g, '<del class="text-text-muted line-through">$1</del>');
+
+  // 7. Parse lists, paragraphs, headings, blockquotes, and dividers
   const lines = processedText.split('\n');
   let resultHtml = '';
   let inList = false;
@@ -82,6 +92,8 @@ export function parseMarkdown(text) {
       
       if (line === '') {
         resultHtml += '<br />';
+      } else if (line.startsWith('> ')) {
+        resultHtml += `<blockquote class="border-l-4 border-accent/60 pl-4 py-1 my-3 bg-surface-secondary/50 text-text-secondary italic rounded-r">${line.substring(2)}</blockquote>`;
       } else if (line.startsWith('###### ')) {
         resultHtml += `<h6 class="text-[14px] font-bold text-accent mt-2 mb-1">${line.substring(7)}</h6>`;
       } else if (line.startsWith('##### ')) {
