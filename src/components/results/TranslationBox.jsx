@@ -29,6 +29,10 @@ export default function TranslationBox({ data }) {
       setTranslatedText('');
       return;
     }
+    if (from === to) {
+      setTranslatedText(text);
+      return;
+    }
     setIsTranslating(true);
     try {
       const requestBody = JSON.stringify({

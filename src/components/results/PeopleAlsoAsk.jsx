@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { truncateText } from '../../utils/formatters';
 
 function PAAItem({ item }) {
@@ -49,15 +50,15 @@ function PAAItem({ item }) {
             </>
           ) : (
             <div className="pt-2">
-              <a 
-                href={`/search?q=${encodeURIComponent(item.question)}&type=web`}
+              <Link 
+                to={`/search?q=${encodeURIComponent(item.question)}&type=web`}
                 className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-primary rounded-lg hover:bg-primary-hover transition-colors"
               >
                 Search for this question
                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
                 </svg>
-              </a>
+              </Link>
             </div>
           )}
         </div>
