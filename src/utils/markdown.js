@@ -70,7 +70,7 @@ export function parseMarkdown(text) {
       }
       
       if (isOrderedListMatch) {
-        resultHtml += `<li><span class="font-medium mr-1 text-text-primary">${isOrderedListMatch[1]}.</span> ${isOrderedListMatch[2]}</li>`;
+        resultHtml += `<li>${isOrderedListMatch[2]}</li>`;
       } else {
         resultHtml += `<li>${line.substring(2)}</li>`;
       }

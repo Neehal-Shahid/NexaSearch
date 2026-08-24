@@ -135,11 +135,11 @@ export default function AiMode({ data, query }) {
         onClick={handleChatClick}
       >
         {chatHistory.map((msg, idx) => (
-          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-            <div className={`max-w-[85%] rounded-2xl px-6 py-4 shadow-sm ${
+          <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start w-full'}`}>
+            <div className={`rounded-2xl px-6 py-4 shadow-sm ${
               msg.role === 'user' 
-                ? 'bg-surface-secondary text-text-primary rounded-tr-sm border border-border-subtle' 
-                : 'bg-white border border-border-subtle text-text-primary'
+                ? 'max-w-[85%] bg-surface-secondary text-text-primary rounded-tr-sm border border-border-subtle' 
+                : 'w-full bg-white border border-border-subtle text-text-primary'
             }`}>
               {msg.role === 'model' && (
                 <div className="flex items-center gap-2 mb-3 text-accent">
