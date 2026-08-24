@@ -14,7 +14,7 @@ const payload = JSON.stringify({
 
 const req = https.request({
   hostname: 'generativelanguage.googleapis.com',
-  path: `/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`,
+  path: `/v1beta/models/gemini-3.5-flash-lite:generateContent?key=${key}`,
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',

@@ -74,15 +74,22 @@ export default function AiMode({ data, query }) {
             const result = await response.json();
             modelText = result.candidates?.[0]?.content?.parts?.[0]?.text;
             if (modelText) break;
+          } else {
+            const errText = await response.text();
+            console.error(`Model ${model} failed with status ${response.status}:`, errText);
+            throw new Error(`API Error: ${response.status} - ${errText.substring(0, 50)}...`);
           }
-        } catch (err) { /* silent fallback */ }
+        } catch (err) {
+          console.error('Fetch error for model', model, err);
+          if (err.message.includes('API Error')) throw err; // rethrow API errors
+        }
       }
 
-      if (!modelText) throw new Error("Failed to connect");
+      if (!modelText) throw new Error("Failed to connect or received empty response from AI");
       
       setChatHistory(prev => [...prev, { role: 'model', content: modelText }]);
     } catch (error) {
-      setChatHistory(prev => [...prev, { role: 'model', content: "I encountered an error connecting to the AI." }]);
+      setChatHistory(prev => [...prev, { role: 'model', content: `I encountered an error connecting to the AI. Details: ${error.message}` }]);
     } finally {
       setIsTyping(false);
     }

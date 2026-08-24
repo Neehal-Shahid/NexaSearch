@@ -3,31 +3,32 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { messages, context } = req.body;
-
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: 'Messages array is required' });
-  }
+  const { messages, context, contents, systemInstruction } = req.body;
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return res.status(500).json({ error: 'Gemini API key is missing' });
   }
 
-  // Format messages for Gemini API
-  // Gemini expects: { contents: [{ role: "user" | "model", parts: [{ text: "..." }] }] }
-  
-  // Inject context into the first message if it's the beginning of the conversation
-  const formattedMessages = messages.map((msg, index) => {
-    let text = msg.content;
-    if (index === 0 && context) {
-      text = `Context from search results:\n${context}\n\nUser Question: ${text}`;
-    }
-    return {
-      role: msg.role === 'user' ? 'user' : 'model',
-      parts: [{ text }]
-    };
-  });
+  let formattedMessages = [];
+  if (contents) {
+    // If frontend sends the exact Gemini payload (like AiMode.jsx does)
+    formattedMessages = contents;
+  } else if (messages && Array.isArray(messages)) {
+    // Legacy format
+    formattedMessages = messages.map((msg, index) => {
+      let text = msg.content;
+      if (index === 0 && context) {
+        text = `Context from search results:\n${context}\n\nUser Question: ${text}`;
+      }
+      return {
+        role: msg.role === 'user' ? 'user' : 'model',
+        parts: [{ text }]
+      };
+    });
+  } else {
+    return res.status(400).json({ error: 'Invalid payload: missing contents or messages' });
+  }
 
   const generateContent = async (modelName) => {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
@@ -36,7 +37,7 @@ export default async function handler(req, res) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: formattedMessages,
-        systemInstruction: {
+        systemInstruction: systemInstruction || {
           parts: [{ text: "You are an intelligent search assistant for the Nexa Search engine. Use the provided search context to answer the user's questions if relevant. If the context does not contain the answer, or if the user asks a general question, use your own knowledge to help them. Keep your answers brief and readable." }]
         },
         generationConfig: {
