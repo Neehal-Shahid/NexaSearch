@@ -307,11 +307,9 @@ export default function SearchPage() {
                         {relatedSearches && <RelatedSearches searches={relatedSearches} />}
 
                         {/* Pagination */}
-                        {type !== 'news' && (
-                          <div className="mt-12">
-                            <Pagination hasNext={hasNext} />
-                          </div>
-                        )}
+                        <div className="mt-12">
+                          <Pagination hasNext={hasNext} />
+                        </div>
                       </div>
 
                       {/* Knowledge panel sidebar (desktop, web results only) */}

@@ -25,7 +25,9 @@ export default function KnowledgePanel({ data }) {
 
       {/* Description */}
       {data.description && (
-        <p className="text-sm text-text-secondary leading-relaxed">{data.description}</p>
+        <p className="text-sm text-text-secondary leading-relaxed">
+          {typeof data.description === 'string' ? data.description : data.description.text || ''}
+        </p>
       )}
 
       {/* Key facts */}
