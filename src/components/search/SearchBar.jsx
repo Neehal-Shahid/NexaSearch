@@ -12,6 +12,12 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
   const inputRef = useRef(null);
   const { history, removeQueryFromHistory } = useSearchHistory();
 
+  // Sync input with URL when user navigates using back/forward buttons
+  useEffect(() => {
+    const urlQuery = searchParams.get('q') || '';
+    setQuery(urlQuery);
+  }, [searchParams]);
+
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (containerRef.current && !containerRef.current.contains(event.target)) {
