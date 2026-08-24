@@ -187,8 +187,8 @@ export default function SearchPage() {
                           </>
                         )}
 
-                        {type === 'web' && localResults && (
-                          <LocalResults results={localResults} />
+                        {type === 'web' && (localResults || data?.local_map) && (
+                          <LocalResults results={localResults || []} map={data?.local_map} />
                         )}
 
                         {type === 'web' && sportsResults && (
