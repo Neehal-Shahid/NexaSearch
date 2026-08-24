@@ -59,16 +59,16 @@ export default async function handler(req, res) {
     // Try user's requested model first
     try {
       const data = await generateContent('gemini-3.5-flash-lite');
-      return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
+      return res.status(200).json(data);
     } catch (e1) {
       console.warn('Fallback 1 triggered:', e1.message);
       try {
         const data = await generateContent('gemini-3.1-flash-lite');
-        return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
+        return res.status(200).json(data);
       } catch (e2) {
         console.warn('Fallback 2 triggered:', e2.message);
         const data = await generateContent('gemini-3.5-flash-lite');
-        return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
+        return res.status(200).json(data);
       }
     }
   } catch (error) {
