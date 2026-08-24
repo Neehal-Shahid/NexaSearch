@@ -20,26 +20,21 @@ export default function AiMode({ data, query }) {
     }
   }, [chatHistory, isTyping]);
 
-  // If no chat history was passed and we have search results, generate the initial overview
-  useEffect(() => {
-    if (chatHistory.length === 0 && data) {
-      const blocks = Array.isArray(data.text_blocks) ? data.text_blocks : (data.snippet ? [{ snippet: data.snippet }] : []);
-      if (blocks.length > 0) {
-        const initialText = blocks.map(b => (b.title ? `**${b.title}**\n${b.snippet}` : b.snippet)).join('\n\n');
-        setChatHistory([{ role: 'model', content: initialText }]);
-      }
-    }
-  }, [data, chatHistory.length]);
-
   const fetchAttemptedRef = useRef(false);
 
-  // Auto-trigger response if we arrived via redirect with a pending user question
+  // Auto-trigger response if we arrived with an empty chat or a pending user question
   useEffect(() => {
-    if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user' && !fetchAttemptedRef.current) {
+    if (chatHistory.length === 0 && data && !fetchAttemptedRef.current) {
+      fetchAttemptedRef.current = true;
+      // We don't have a user question yet, so we act as if the user asked their search query
+      const initialHistory = [{ role: 'user', content: `Please provide a comprehensive AI overview for my search query: "${query}"` }];
+      setChatHistory(initialHistory);
+      fetchResponse(initialHistory);
+    } else if (chatHistory.length > 0 && chatHistory[chatHistory.length - 1].role === 'user' && !fetchAttemptedRef.current) {
       fetchAttemptedRef.current = true;
       fetchResponse(chatHistory);
     }
-  }, []);
+  }, [data, query]);
 
   const fetchResponse = async (historyToSend) => {
     setIsTyping(true);
