@@ -9,9 +9,9 @@ export function parseMarkdown(text) {
     const encodedCode = encodeURIComponent(code);
     codeBlocks.push(`
       <div class="my-5 bg-background border border-border-subtle rounded-xl overflow-hidden shadow-sm relative group">
-        <div class="flex items-center justify-between px-4 py-2 bg-surface-secondary border-b border-border-subtle">
-          <span class="text-xs font-bold text-text-secondary uppercase tracking-wider">${lang || 'CODE'}</span>
-          <button class="copy-code-btn text-xs font-medium text-text-muted hover:text-accent flex items-center gap-1.5 transition-colors focus:outline-none" data-code="${encodedCode}">
+        <div class="flex items-center justify-between px-4 py-2 bg-accent border-b border-accent-hover">
+          <span class="text-xs font-bold text-white uppercase tracking-wider">${lang || 'CODE'}</span>
+          <button class="copy-code-btn text-xs font-medium text-white/80 hover:text-white flex items-center gap-1.5 transition-colors focus:outline-none" data-code="${encodedCode}">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
             <span>Copy code</span>
           </button>
@@ -58,20 +58,36 @@ export function parseMarkdown(text) {
         continue;
     }
 
-    if (line.startsWith('* ') || line.startsWith('- ')) {
+    const isUnorderedList = line.startsWith('* ') || line.startsWith('- ');
+    const isOrderedListMatch = line.match(/^(\d+)\.\s(.*)/);
+
+    if (isUnorderedList || isOrderedListMatch) {
       if (!inList) {
-        resultHtml += '<ul class="list-disc ml-6 mt-2 mb-2 space-y-1">';
-        inList = true;
+        const listTag = isOrderedListMatch ? 'ol' : 'ul';
+        const listClass = isOrderedListMatch ? 'list-decimal ml-6 mt-2 mb-2 space-y-1' : 'list-disc ml-6 mt-2 mb-2 space-y-1';
+        resultHtml += `<${listTag} class="${listClass}" data-type="${listTag}">`;
+        inList = listTag;
       }
-      resultHtml += `<li>${line.substring(2)}</li>`;
+      
+      if (isOrderedListMatch) {
+        resultHtml += `<li><span class="font-medium mr-1 text-text-primary">${isOrderedListMatch[1]}.</span> ${isOrderedListMatch[2]}</li>`;
+      } else {
+        resultHtml += `<li>${line.substring(2)}</li>`;
+      }
     } else {
       if (inList) {
-        resultHtml += '</ul>';
+        resultHtml += `</${inList}>`;
         inList = false;
       }
       
       if (line === '') {
         resultHtml += '<br />';
+      } else if (line.startsWith('###### ')) {
+        resultHtml += `<h6 class="text-[14px] font-bold text-accent mt-2 mb-1">${line.substring(7)}</h6>`;
+      } else if (line.startsWith('##### ')) {
+        resultHtml += `<h5 class="text-[15px] font-bold text-accent mt-2 mb-1">${line.substring(6)}</h5>`;
+      } else if (line.startsWith('#### ')) {
+        resultHtml += `<h4 class="text-[16px] font-bold text-accent mt-3 mb-1.5">${line.substring(5)}</h4>`;
       } else if (line.startsWith('### ')) {
         resultHtml += `<h3 class="text-[17px] font-bold text-accent mt-4 mb-2">${line.substring(4)}</h3>`;
       } else if (line.startsWith('## ')) {
@@ -85,7 +101,7 @@ export function parseMarkdown(text) {
   }
 
   if (inList) {
-    resultHtml += '</ul>';
+    resultHtml += `</${inList}>`;
   }
 
   // Remove trailing <br /> if it exists
