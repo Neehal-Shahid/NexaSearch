@@ -50,7 +50,7 @@ export default function CurrencyConverterBox({ data }) {
         generationConfig: { temperature: 0.1 }
       });
 
-      const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'];
+      const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
       let modelText = null;
 
       for (const model of modelsToTry) {

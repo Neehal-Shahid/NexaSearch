@@ -65,7 +65,7 @@ export default async function handler(req, res) {
         return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
       } catch (e2) {
         console.warn('Fallback 2 triggered:', e2.message);
-        const data = await generateContent('gemini-1.5-flash');
+        const data = await generateContent('gemini-3.5-flash-lite');
         return res.status(200).json({ text: data.candidates[0].content.parts[0].text });
       }
     }

@@ -43,7 +43,7 @@ export default function TranslationBox({ data }) {
         generationConfig: { temperature: 0.1 } // low temperature for accurate translation
       });
 
-      const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'];
+      const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite'];
       let modelText = null;
 
       for (const model of modelsToTry) {
