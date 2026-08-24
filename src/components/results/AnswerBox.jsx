@@ -25,9 +25,9 @@ export default function AnswerBox({ data }) {
         </div>
       )}
       
-      {data.snippet && (
+      {(data.snippet || data.answer || data.result) && (
         <p className="text-lg text-text-primary leading-relaxed mb-4">
-          {data.snippet}
+          {data.snippet || data.answer || data.result}
         </p>
       )}
 
