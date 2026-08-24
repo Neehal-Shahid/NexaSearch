@@ -107,10 +107,33 @@ export default function AiMode({ data, query }) {
     fetchResponse(newHistory);
   };
 
+  const handleChatClick = (e) => {
+    const copyBtn = e.target.closest('.copy-code-btn');
+    if (copyBtn) {
+      const code = decodeURIComponent(copyBtn.getAttribute('data-code') || '');
+      navigator.clipboard.writeText(code).then(() => {
+        const span = copyBtn.querySelector('span');
+        const originalText = span.innerText;
+        span.innerText = 'Copied!';
+        copyBtn.classList.add('text-green-500');
+        
+        setTimeout(() => {
+          span.innerText = originalText;
+          copyBtn.classList.remove('text-green-500');
+        }, 2000);
+      }).catch(err => {
+        console.error('Failed to copy code: ', err);
+      });
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-180px)] max-w-4xl mx-auto w-full bg-background">
       {/* Chat History Area */}
-      <div className="flex-1 overflow-y-auto px-4 py-8 space-y-8 scrollbar-thin scrollbar-thumb-border-subtle scrollbar-track-transparent">
+      <div 
+        className="flex-1 overflow-y-auto px-4 py-8 space-y-8 scrollbar-thin scrollbar-thumb-border-subtle scrollbar-track-transparent"
+        onClick={handleChatClick}
+      >
         {chatHistory.map((msg, idx) => (
           <div key={idx} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl px-6 py-4 shadow-sm ${
