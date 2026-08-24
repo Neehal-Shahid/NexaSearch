@@ -42,7 +42,6 @@ export default async function handler(req, res) {
   const start = (pageNum - 1) * 10;
 
   for (const apiKey of apiKeys) {
-    // Build SerpAPI request
     const params = new URLSearchParams({
       engine,
       q: q.trim(),
@@ -50,6 +49,21 @@ export default async function handler(req, res) {
       start: start.toString(),
       num: '10',
     });
+
+    // Use Vercel's automatic geolocation headers to provide accurate local results
+    const city = req.headers['x-vercel-ip-city'];
+    const region = req.headers['x-vercel-ip-country-region'];
+    const country = req.headers['x-vercel-ip-country'];
+    
+    if (city) {
+      let locationStr = decodeURIComponent(city);
+      if (region) locationStr += `, ${decodeURIComponent(region)}`;
+      params.set('location', locationStr);
+    }
+    
+    if (country) {
+      params.set('gl', country.toLowerCase());
+    }
 
     // Google News uses 'gl' for location but doesn't support 'start' the same way
     if (type === 'news') {
