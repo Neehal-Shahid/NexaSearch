@@ -46,9 +46,15 @@ export default async function handler(req, res) {
       engine,
       q: q.trim(),
       api_key: apiKey,
-      start: start.toString(),
-      num: '10',
     });
+
+    // Handle engine-specific pagination parameters
+    if (engine === 'google_images') {
+      params.set('ijn', (pageNum - 1).toString());
+    } else {
+      params.set('start', start.toString());
+      params.set('num', '10');
+    }
 
     // Use Vercel's automatic geolocation headers to provide accurate local results
     const city = req.headers['x-vercel-ip-city'];
@@ -63,9 +69,8 @@ export default async function handler(req, res) {
       params.set('gl', country.toLowerCase());
     }
 
-    // Google News uses 'gl' for location but doesn't support 'start' the same way
+    // Google News uses 'gl' for location but doesn't support standard 'num'
     if (type === 'news') {
-      params.delete('start');
       params.delete('num');
     }
 

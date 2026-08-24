@@ -116,6 +116,32 @@ export default function SearchPage() {
   const localResults = type === 'web' ? data?.local_results?.places || data?.local_results : null;
   const sportsResults = type === 'web' ? data?.sports_results : null;
 
+  // Intent Analysis Algorithm to dynamically order search packs
+  const getPackOrder = () => {
+    const q = query.toLowerCase();
+    
+    const videoKeywords = ['video', 'videos', 'movie', 'watch', 'trailer', 'youtube', 'clip', 'stream', 'mp4'];
+    const imageKeywords = ['pic', 'pics', 'picture', 'pictures', 'image', 'images', 'photo', 'photos', 'wallpaper', 'art', 'drawing'];
+    const newsKeywords = ['news', 'latest', 'update', 'breaking', 'today', 'recent'];
+    
+    // Assign +10 points if the query matches the specific intent
+    const videoScore = videoKeywords.some(kw => q.includes(kw)) ? 10 : 0;
+    const imageScore = imageKeywords.some(kw => q.includes(kw)) ? 10 : 0;
+    const newsScore = newsKeywords.some(kw => q.includes(kw)) ? 10 : 0;
+    
+    // Tie-breaker default priorities (Fallback: News > Images > Videos)
+    const packs = [
+      { id: 'top_stories', score: newsScore + 3 },
+      { id: 'inline_images', score: imageScore + 2 },
+      { id: 'inline_videos', score: videoScore + 1 }
+    ];
+    
+    // Sort highest score first
+    return packs.sort((a, b) => b.score - a.score).map(p => p.id);
+  };
+  
+  const packOrder = type === 'web' ? getPackOrder() : [];
+
   // No query provided
   if (!query) {
     return (
@@ -195,65 +221,76 @@ export default function SearchPage() {
                           <SportsBox data={sportsResults} />
                         )}
 
-                        {type === 'web' && data?.top_stories && data.top_stories.length > 0 && (
-                          <div className="mb-8">
-                            <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-                              </svg>
-                              Top Stories
-                            </h2>
-                            <NewsResultList results={data.top_stories.slice(0, 3)} />
-                            <div className="mt-4">
-                              <Link 
-                                to={`/search?q=${encodeURIComponent(query)}&type=news&page=1`} 
-                                className="inline-flex px-4 py-2 bg-surface border border-border-subtle rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-secondary hover:text-accent transition-colors"
-                              >
-                                Investigate deeper →
-                              </Link>
-                            </div>
-                          </div>
-                        )}
+                        {/* Dynamic Intent-Based Inline Packs */}
+                        {type === 'web' && packOrder.map(packId => {
+                          if (packId === 'top_stories' && data?.top_stories && data.top_stories.length > 0) {
+                            return (
+                              <div key={packId} className="mb-8">
+                                <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                                  </svg>
+                                  Top Stories
+                                </h2>
+                                <NewsResultList results={data.top_stories.slice(0, 3)} />
+                                <div className="mt-4">
+                                  <Link 
+                                    to={`/search?q=${encodeURIComponent(query)}&type=news&page=1`} 
+                                    className="inline-flex px-4 py-2 bg-surface border border-border-subtle rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-secondary hover:text-accent transition-colors"
+                                  >
+                                    Investigate deeper →
+                                  </Link>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          if (packId === 'inline_images' && data?.inline_images && data.inline_images.length > 0) {
+                            return (
+                              <div key={packId} className="mb-8">
+                                <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  </svg>
+                                  Images
+                                </h2>
+                                <ImageResultGrid results={data.inline_images.slice(0, 4)} />
+                                <div className="mt-4">
+                                  <Link 
+                                    to={`/search?q=${encodeURIComponent(query)}&type=images&page=1`} 
+                                    className="inline-flex px-4 py-2 bg-surface border border-border-subtle rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-secondary hover:text-accent transition-colors"
+                                  >
+                                    View all images →
+                                  </Link>
+                                </div>
+                              </div>
+                            );
+                          }
 
-                        {type === 'web' && data?.inline_videos && data.inline_videos.length > 0 && (
-                          <div className="mb-8">
-                            <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                              </svg>
-                              Videos
-                            </h2>
-                            <VideoResultGrid results={data.inline_videos.slice(0, 3)} />
-                            <div className="mt-4">
-                              <Link 
-                                to={`/search?q=${encodeURIComponent(query)}&type=videos&page=1`} 
-                                className="inline-flex px-4 py-2 bg-surface border border-border-subtle rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-secondary hover:text-accent transition-colors"
-                              >
-                                View all videos →
-                              </Link>
-                            </div>
-                          </div>
-                        )}
-
-                        {type === 'web' && data?.inline_images && data.inline_images.length > 0 && (
-                          <div className="mb-8">
-                            <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
-                              <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                              </svg>
-                              Images
-                            </h2>
-                            <ImageResultGrid results={data.inline_images.slice(0, 4)} />
-                            <div className="mt-4">
-                              <Link 
-                                to={`/search?q=${encodeURIComponent(query)}&type=images&page=1`} 
-                                className="inline-flex px-4 py-2 bg-surface border border-border-subtle rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-secondary hover:text-accent transition-colors"
-                              >
-                                View all images →
-                              </Link>
-                            </div>
-                          </div>
-                        )}
+                          if (packId === 'inline_videos' && data?.inline_videos && data.inline_videos.length > 0) {
+                            return (
+                              <div key={packId} className="mb-8">
+                                <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
+                                  <svg className="w-5 h-5 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                  </svg>
+                                  Videos
+                                </h2>
+                                <VideoResultGrid results={data.inline_videos.slice(0, 3)} />
+                                <div className="mt-4">
+                                  <Link 
+                                    to={`/search?q=${encodeURIComponent(query)}&type=videos&page=1`} 
+                                    className="inline-flex px-4 py-2 bg-surface border border-border-subtle rounded-lg text-sm font-semibold text-text-primary hover:bg-surface-secondary hover:text-accent transition-colors"
+                                  >
+                                    View all videos →
+                                  </Link>
+                                </div>
+                              </div>
+                            );
+                          }
+                          
+                          return null;
+                        })}
 
                         {type === 'web' && <WebResultList results={results} />}
                         {type === 'images' && <ImageResultGrid results={results} />}
