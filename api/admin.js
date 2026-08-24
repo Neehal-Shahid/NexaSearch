@@ -4,8 +4,9 @@ export default async function handler(req, res) {
   }
 
   const apiKeys = [process.env.SERPAPI_KEY, process.env.SERPAPI_KEY_2].filter(Boolean);
+  const geminiKey = process.env.GEMINI_API_KEY;
   
-  if (apiKeys.length === 0) {
+  if (apiKeys.length === 0 && !geminiKey) {
     return res.status(500).json({ error: 'No API keys configured' });
   }
 
@@ -19,7 +20,8 @@ export default async function handler(req, res) {
         // Remove the API key from the response for security
         delete data.api_key;
         accounts.push({
-          keyName: i === 0 ? 'Primary Key (SERPAPI_KEY)' : 'Backup Key (SERPAPI_KEY_2)',
+          type: 'serpapi',
+          keyName: i === 0 ? 'SerpAPI Primary' : 'SerpAPI Backup',
           ...data
         });
       }
@@ -28,33 +30,49 @@ export default async function handler(req, res) {
     }
   }
 
-  // Calculate totals across all rotated keys
-  const totalLimit = accounts.reduce((sum, acc) => sum + (acc.searches_per_month || 0), 0);
-  const totalUsage = accounts.reduce((sum, acc) => sum + (acc.this_month_usage || 0), 0);
-  const searchesLeft = accounts.reduce((sum, acc) => sum + (acc.total_searches_left || 0), 0);
+  if (geminiKey) {
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${geminiKey}`);
+      if (response.ok) {
+        accounts.push({
+          type: 'gemini',
+          keyName: 'Gemini AI',
+          account_email: 'Google AI Studio',
+          account_status: 'Active',
+          plan_name: 'Generative Language API',
+          this_month_usage: 'N/A',
+          searches_per_month: 'Tracked in GCP',
+          account_rate_limit_per_hour: '15 RPM'
+        });
+      } else {
+         accounts.push({
+          type: 'gemini',
+          keyName: 'Gemini AI',
+          account_email: 'Google AI Studio',
+          account_status: 'Invalid API Key',
+          plan_name: 'Generative Language API'
+        });
+      }
+    } catch (e) {
+      console.error('Failed to fetch Gemini status', e);
+    }
+  }
 
-  // Return real API limits and some simulated portfolio analytics
+  // Calculate totals across all rotated keys (only SerpAPI)
+  const serpAccounts = accounts.filter(a => a.type === 'serpapi');
+  const totalLimit = serpAccounts.reduce((sum, acc) => sum + (acc.searches_per_month || 0), 0);
+  const totalUsage = serpAccounts.reduce((sum, acc) => sum + (acc.this_month_usage || 0), 0);
+  const searchesLeft = serpAccounts.reduce((sum, acc) => sum + (acc.total_searches_left || 0), 0);
+
+  // Return real API limits only
   return res.status(200).json({
     metrics: {
       totalLimit,
       totalUsage,
       searchesLeft,
       usagePercent: totalLimit > 0 ? ((totalUsage / totalLimit) * 100).toFixed(1) : 0,
-      activeKeys: accounts.length
+      activeKeys: serpAccounts.length
     },
-    accounts,
-    recentActivity: [
-      { id: 1, query: "coffee shops near me", type: "local", time: "Just now", status: "success", ms: 843 },
-      { id: 2, query: "hospitals near me", type: "local", time: "5 mins ago", status: "success", ms: 912 },
-      { id: 3, query: "translate to urdu", type: "web", time: "12 mins ago", status: "success", ms: 1204 },
-      { id: 4, query: "best laptops 2026", type: "shopping", time: "1 hour ago", status: "success", ms: 645 },
-      { id: 5, query: "how to learn react", type: "videos", time: "3 hours ago", status: "success", ms: 1102 }
-    ],
-    topQueries: [
-      { query: "weather", count: 124, trend: "+12%" },
-      { query: "news", count: 89, trend: "+5%" },
-      { query: "translation", count: 56, trend: "+18%" },
-      { query: "local restaurants", count: 42, trend: "-2%" },
-    ]
+    accounts
   });
 }
