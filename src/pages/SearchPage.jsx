@@ -12,6 +12,7 @@ import KnowledgePanel from '../components/results/KnowledgePanel';
 import RelatedSearches from '../components/results/RelatedSearches';
 import LocalResults from '../components/results/LocalResults';
 import NexaOverview from '../components/results/NexaOverview';
+import AiMode from '../components/results/AiMode';
 import AnswerBox from '../components/results/AnswerBox';
 import SportsBox from '../components/results/SportsBox';
 import PeopleAlsoAsk from '../components/results/PeopleAlsoAsk';
@@ -169,57 +170,61 @@ export default function SearchPage() {
                   title={`No results found for "${query}"`}
                   description="Try different keywords, check your spelling, or broaden your search."
                 />
+              ) : type === 'ai' ? (
+                <div className="w-full">
+                  <AiMode data={data} query={query} />
+                </div>
               ) : (
-                <div className={type === 'web' && knowledgeGraph ? 'flex gap-10' : ''}>
-                  {/* Main results column */}
-                  <div className={type === 'web' && knowledgeGraph ? 'flex-1 min-w-0 max-w-3xl' : 'w-full max-w-5xl'}>
-                    
-                    {/* Nexa Overview or Answer Box */}
-                    {type === 'web' && (
-                      <>
-                        {answerBox && <AnswerBox data={answerBox} />}
-                        {aiOverviewData && <NexaOverview data={aiOverviewData} />}
-                      </>
-                    )}
+                    <div className={type === 'web' && knowledgeGraph ? 'flex gap-10' : ''}>
+                      {/* Main results column */}
+                      <div className={type === 'web' && knowledgeGraph ? 'flex-1 min-w-0 max-w-3xl' : 'w-full max-w-5xl'}>
+                        
+                        {/* Nexa Overview or Answer Box */}
+                        {type === 'web' && (
+                          <>
+                            {answerBox && <AnswerBox data={answerBox} />}
+                            {aiOverviewData && <NexaOverview data={aiOverviewData} searchContext={data?.organic_results?.slice(0, 5).map(r => `Title: ${r.title}\nSnippet: ${r.snippet}`).join('\n\n')} query={query} />}
+                          </>
+                        )}
 
-                    {type === 'web' && localResults && (
-                      <LocalResults results={localResults} />
-                    )}
+                        {type === 'web' && localResults && (
+                          <LocalResults results={localResults} />
+                        )}
 
-                    {type === 'web' && sportsResults && (
-                      <SportsBox data={sportsResults} />
-                    )}
+                        {type === 'web' && sportsResults && (
+                          <SportsBox data={sportsResults} />
+                        )}
 
-                    {type === 'web' && <WebResultList results={results} />}
-                    {type === 'images' && <ImageResultGrid results={results} />}
-                    {type === 'news' && <NewsResultList results={results} />}
-                    {type === 'videos' && <VideoResultGrid results={results} />}
-                    {type === 'shopping' && <ShoppingResultGrid results={results} />}
+                        {type === 'web' && <WebResultList results={results} />}
+                        {type === 'images' && <ImageResultGrid results={results} />}
+                        {type === 'news' && <NewsResultList results={results} />}
+                        {type === 'videos' && <VideoResultGrid results={results} />}
+                        {type === 'shopping' && <ShoppingResultGrid results={results} />}
 
-                    {/* People Also Ask (web only) */}
-                    {type === 'web' && peopleAlsoAsk && (
-                      <PeopleAlsoAsk questions={peopleAlsoAsk} />
-                    )}
+                        {/* People Also Ask (web only) */}
+                        {type === 'web' && peopleAlsoAsk && (
+                          <PeopleAlsoAsk questions={peopleAlsoAsk} />
+                        )}
 
-                    {/* Related searches (web only) */}
-                    {relatedSearches && <RelatedSearches searches={relatedSearches} />}
+                        {/* Related searches (web only) */}
+                        {relatedSearches && <RelatedSearches searches={relatedSearches} />}
 
-                    {/* Pagination */}
-                    {type !== 'news' && (
-                      <div className="mt-12">
-                        <Pagination hasNext={hasNext} />
+                        {/* Pagination */}
+                        {type !== 'news' && (
+                          <div className="mt-12">
+                            <Pagination hasNext={hasNext} />
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
 
-                  {/* Knowledge panel sidebar (desktop, web results only) */}
-                  {type === 'web' && knowledgeGraph && (
-                    <div className="hidden lg:block w-80 shrink-0">
-                      <KnowledgePanel data={knowledgeGraph} />
+                      {/* Knowledge panel sidebar (desktop, web results only) */}
+                      {type === 'web' && knowledgeGraph && (
+                        <div className="hidden lg:block w-80 shrink-0">
+                          <KnowledgePanel data={knowledgeGraph} />
+                        </div>
+                      )}
                     </div>
                   )}
-                </div>
-              )}
             </>
           )}
         </div>

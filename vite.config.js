@@ -8,6 +8,15 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     server: {
       proxy: {
+        '/api/chat': {
+          target: 'https://generativelanguage.googleapis.com',
+          changeOrigin: true,
+          rewrite: (path) => {
+            const url = new URL(path, 'http://localhost');
+            const model = url.searchParams.get('model') || 'gemini-3.5-flash-lite';
+            return `/v1beta/models/${model}:generateContent?key=${env.GEMINI_API_KEY}`;
+          },
+        },
         '/api/search': {
           target: 'https://serpapi.com',
           changeOrigin: true,

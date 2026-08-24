@@ -1,5 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
 
 const LANGUAGES = [
@@ -11,28 +10,89 @@ const LANGUAGES = [
 ].sort();
 
 export default function TranslationBox({ data }) {
-  const navigate = useNavigate();
   const [sourceText, setSourceText] = useState(data.source.text);
   const [sourceLang, setSourceLang] = useState(data.source.language || 'English');
   const [targetLang, setTargetLang] = useState(data.target.language || 'Urdu');
+  const [translatedText, setTranslatedText] = useState(data.target.text);
+  const [isTranslating, setIsTranslating] = useState(false);
   
   // Update local state when data changes (from URL params)
   useEffect(() => {
     setSourceText(data.source.text);
     setSourceLang(data.source.language || 'English');
     setTargetLang(data.target.language || 'Urdu');
+    setTranslatedText(data.target.text);
   }, [data]);
 
+  const performTranslation = async (text, from, to) => {
+    if (!text.trim()) {
+      setTranslatedText('');
+      return;
+    }
+    setIsTranslating(true);
+    try {
+      const requestBody = JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text }] }],
+        systemInstruction: {
+          parts: [{ text: `You are a professional translator. Translate the given text from ${from} to ${to}. Respond ONLY with the translated text, nothing else. No quotes, no explanations.` }]
+        },
+        generationConfig: { temperature: 0.1 } // low temperature for accurate translation
+      });
+
+      const modelsToTry = ['gemini-3.5-flash-lite', 'gemini-3.1-flash-lite', 'gemini-3.5-flash'];
+      let modelText = null;
+
+      for (const model of modelsToTry) {
+        try {
+          const response = await fetch(`/api/chat?model=${model}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: requestBody
+          });
+          
+          if (response.ok) {
+            const result = await response.json();
+            modelText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (modelText) {
+              setTranslatedText(modelText.trim());
+              break;
+            }
+          }
+        } catch (err) {
+          // silent fallback
+        }
+      }
+
+      if (!modelText) {
+        console.error('Translation failed: All models exhausted.');
+      }
+    } catch (err) {
+      console.error('Translation process failed:', err);
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
   const handleTranslate = () => {
-    if (!sourceText.trim()) return;
-    navigate(`/search?q=translate ${encodeURIComponent(sourceText)} from ${sourceLang} to ${targetLang}&type=web&page=1`);
+    performTranslation(sourceText, sourceLang, targetLang);
   };
 
   const handleSwap = () => {
     const tempLang = sourceLang;
     setSourceLang(targetLang);
     setTargetLang(tempLang);
-    navigate(`/search?q=translate ${encodeURIComponent(data.target.text)} from ${targetLang} to ${sourceLang}&type=web&page=1`);
+    setSourceText(translatedText);
+    performTranslation(translatedText, targetLang, tempLang);
+  };
+
+  const handleSourceLangChange = (newVal) => {
+    setSourceLang(newVal);
+    performTranslation(sourceText, newVal, targetLang);
+  };
+
+  const handleTargetLangChange = (newVal) => {
+    setTargetLang(newVal);
+    performTranslation(sourceText, sourceLang, newVal);
   };
 
   return (
@@ -46,10 +106,7 @@ export default function TranslationBox({ data }) {
           <CustomSelect
             value={sourceLang}
             options={LANGUAGES.includes(sourceLang) ? LANGUAGES : [sourceLang, ...LANGUAGES]}
-            onChange={(newVal) => {
-              setSourceLang(newVal);
-              navigate(`/search?q=translate ${encodeURIComponent(sourceText)} to ${newVal}&type=web&page=1`);
-            }}
+            onChange={handleSourceLangChange}
             className="text-sm font-semibold text-text-primary"
             ariaLabel="Select source language"
           />
@@ -67,10 +124,7 @@ export default function TranslationBox({ data }) {
           <CustomSelect
             value={targetLang}
             options={LANGUAGES.includes(targetLang) ? LANGUAGES : [targetLang, ...LANGUAGES]}
-            onChange={(newVal) => {
-              setTargetLang(newVal);
-              navigate(`/search?q=translate ${encodeURIComponent(sourceText)} to ${newVal}&type=web&page=1`);
-            }}
+            onChange={handleTargetLangChange}
             className="text-sm font-semibold text-text-primary"
             ariaLabel="Select target language"
           />
@@ -96,18 +150,33 @@ export default function TranslationBox({ data }) {
           <div className="absolute bottom-4 right-4 opacity-0 group-focus-within:opacity-100 transition-opacity">
             <button 
               onClick={handleTranslate}
-              className="bg-accent text-white p-2 rounded-full hover:bg-accent-hover transition-colors shadow-md"
+              disabled={isTranslating}
+              className="bg-accent text-white p-2 rounded-full hover:bg-accent-hover transition-colors shadow-md disabled:opacity-50"
             >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              <svg className={`w-4 h-4 ${isTranslating ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                {isTranslating ? (
+                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                ) : (
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                )}
               </svg>
             </button>
           </div>
         </div>
-        <div className="p-6 h-40 overflow-y-auto bg-surface-secondary rounded-br-xl">
-          <p className="text-xl text-accent font-medium leading-relaxed">
-            {data.target.text}
-          </p>
+        <div className="p-6 h-40 overflow-y-auto bg-surface-secondary rounded-br-xl relative">
+          {isTranslating ? (
+             <div className="absolute inset-0 flex items-center justify-center">
+               <div className="flex gap-1">
+                 <div className="w-2 h-2 rounded-full bg-accent/40 animate-bounce"></div>
+                 <div className="w-2 h-2 rounded-full bg-accent/60 animate-bounce" style={{ animationDelay: '0.15s' }}></div>
+                 <div className="w-2 h-2 rounded-full bg-accent/80 animate-bounce" style={{ animationDelay: '0.3s' }}></div>
+               </div>
+             </div>
+          ) : (
+            <p className="text-xl text-accent font-medium leading-relaxed" dir={targetLang === 'Urdu' || targetLang === 'Arabic' || targetLang === 'Persian' ? 'rtl' : 'ltr'}>
+              {translatedText}
+            </p>
+          )}
         </div>
       </div>
     </div>

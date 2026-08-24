@@ -169,12 +169,12 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
         <div className={`absolute left-0 right-0 z-50 bg-white border border-border-subtle rounded-xl shadow-xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200 ${isHero ? 'top-[calc(100%+0.75rem)]' : 'top-[calc(100%+0.5rem)]'}`}>
           <ul className="py-2">
             {suggestions.map((suggestion, idx) => (
-              <li key={idx} className={`group flex items-center transition-colors ${selectedIndex === idx ? 'bg-surface-secondary' : 'hover:bg-surface-secondary'}`}>
+              <li key={idx} className={`group flex items-center transition-colors ${selectedIndex === idx ? 'bg-gray-100' : 'hover:bg-gray-100'}`}>
                 <button
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
                   onClick={() => handleSuggestionClick(suggestion)}
-                  className={`flex-1 text-left px-5 flex items-center gap-3 text-text-primary focus-visible:outline-none focus-visible:bg-surface-secondary ${
+                  className={`flex-1 text-left px-5 flex items-center gap-3 text-text-primary focus-visible:outline-none focus-visible:bg-gray-100 ${
                     isHero ? 'py-3' : 'py-2.5'
                   }`}
                 >
