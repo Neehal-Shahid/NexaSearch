@@ -96,7 +96,8 @@ export default function LocalResults({ results, map }) {
             </div>
           </a>
         ))}
-      </div>
+        </div>
+      )}
     </div>
   );
 }
