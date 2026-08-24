@@ -36,8 +36,8 @@ export default function Footer() {
               <h4 className="text-xs font-bold text-text-primary uppercase tracking-widest mb-4">Company</h4>
               <ul className="space-y-3">
                 <li><Link to="/about" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">About Nexa</Link></li>
-                <li><a href="#" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Privacy Policy</a></li>
-                <li><a href="#" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Terms of Service</a></li>
+                <li><Link to="/privacy" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Privacy Policy</Link></li>
+                <li><Link to="/terms" className="text-sm text-text-secondary hover:text-primary hover:translate-x-1 inline-block transition-all duration-200">Terms of Service</Link></li>
               </ul>
             </div>
           </div>
