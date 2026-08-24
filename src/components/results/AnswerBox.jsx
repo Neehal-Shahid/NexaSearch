@@ -1,8 +1,13 @@
 import CurrencyConverterBox from './CurrencyConverterBox';
 import TranslationBox from './TranslationBox';
+import WeatherBox from './WeatherBox';
 
 export default function AnswerBox({ data }) {
   if (!data) return null;
+
+  if (data.type === 'weather_result') {
+    return <WeatherBox data={data} />;
+  }
 
   if (data.type === 'currency_converter' && data.currency_converter) {
     return <CurrencyConverterBox data={data} />;
