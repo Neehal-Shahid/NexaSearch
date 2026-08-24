@@ -232,7 +232,7 @@ export default function SearchPage() {
                                   </svg>
                                   Top Stories
                                 </h2>
-                                <NewsResultList results={data.top_stories.slice(0, 3)} />
+                                <NewsResultList results={data.top_stories.slice(0, 3)} variant="inline" />
                                 <div className="mt-4">
                                   <Link 
                                     to={`/search?q=${encodeURIComponent(query)}&type=news&page=1`} 
@@ -254,7 +254,7 @@ export default function SearchPage() {
                                   </svg>
                                   Images
                                 </h2>
-                                <ImageResultGrid results={data.inline_images.slice(0, 4)} />
+                                <ImageResultGrid results={data.inline_images.slice(0, 4)} variant="inline" />
                                 <div className="mt-4">
                                   <Link 
                                     to={`/search?q=${encodeURIComponent(query)}&type=images&page=1`} 
@@ -276,7 +276,7 @@ export default function SearchPage() {
                                   </svg>
                                   Videos
                                 </h2>
-                                <VideoResultGrid results={data.inline_videos.slice(0, 3)} />
+                                <VideoResultGrid results={data.inline_videos.slice(0, 3)} variant="inline" />
                                 <div className="mt-4">
                                   <Link 
                                     to={`/search?q=${encodeURIComponent(query)}&type=videos&page=1`} 

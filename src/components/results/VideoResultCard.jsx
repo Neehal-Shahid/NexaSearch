@@ -1,8 +1,9 @@
 import { formatDuration } from '../../utils/formatters';
 import SaveButton from '../ui/SaveButton';
 
-export default function VideoResultCard({ result }) {
+export default function VideoResultCard({ result, variant = 'default' }) {
   const thumbnail = result.thumbnail?.static || result.thumbnail;
+  const isInline = variant === 'inline';
 
   return (
     <article className="group flex flex-col h-full bg-surface rounded-xl border border-border-subtle hover:border-border hover:shadow-md transition-all duration-300 overflow-hidden">
@@ -10,7 +11,7 @@ export default function VideoResultCard({ result }) {
         href={result.link}
         target="_blank"
         rel="noopener noreferrer"
-        className="block flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className={`block flex-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent ${isInline ? 'pb-4' : ''}`}
       >
         {/* Thumbnail */}
         <div className="relative aspect-video overflow-hidden bg-surface-secondary border-b border-border-subtle">
@@ -45,7 +46,7 @@ export default function VideoResultCard({ result }) {
 
         {/* Info */}
         <div className="p-4">
-          <h3 className="text-base font-semibold text-accent leading-snug line-clamp-2 transition-transform duration-200 group-hover:scale-[1.015] origin-left">
+          <h3 className={`text-base font-semibold text-accent leading-snug transition-transform duration-200 group-hover:scale-[1.015] origin-left ${isInline ? 'line-clamp-2 text-sm' : 'line-clamp-2'}`}>
             {result.title}
           </h3>
 
@@ -64,9 +65,11 @@ export default function VideoResultCard({ result }) {
       </a>
 
       {/* Save button */}
-      <div className="px-4 pb-4 pt-2 flex justify-end mt-auto border-t border-border-subtle/50">
-        <SaveButton result={result} type="video" size="sm" />
-      </div>
+      {!isInline && (
+        <div className="px-4 pb-4 pt-2 flex justify-end mt-auto border-t border-border-subtle/50">
+          <SaveButton result={result} type="video" size="sm" />
+        </div>
+      )}
     </article>
   );
 }
