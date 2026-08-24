@@ -14,6 +14,7 @@ const HistoryPage = lazy(() => import('./pages/HistoryPage'));
 const AboutPage = lazy(() => import('./pages/AboutPage'));
 const PrivacyPage = lazy(() => import('./pages/PrivacyPage'));
 const TermsPage = lazy(() => import('./pages/TermsPage'));
+const AdminPage = lazy(() => import('./pages/AdminPage'));
 
 function PageLoader() {
   return (
@@ -52,6 +53,7 @@ export default function App() {
                 <Route path="/about" element={<AboutPage />} />
                 <Route path="/privacy" element={<PrivacyPage />} />
                 <Route path="/terms" element={<TermsPage />} />
+                <Route path="/admin" element={<AdminPage />} />
               </Routes>
             </Suspense>
 
