@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import EmptyState from '../components/feedback/EmptyState';
+import ConfirmModal from '../components/ui/ConfirmModal';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { formatHistoryDate } from '../utils/formatters';
 
@@ -9,6 +10,7 @@ export default function HistoryPage() {
   const navigate = useNavigate();
   const { history, removeFromHistory, clearHistory, clearHistoryByTimeframe } = useSearchHistory();
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [modalConfig, setModalConfig] = useState({ isOpen: false, value: null, label: null });
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -22,13 +24,15 @@ export default function HistoryPage() {
   }, []);
 
   const handleClear = (value, label) => {
-    if (window.confirm(`Are you sure you want to clear history for: ${label}?`)) {
-      if (value === 'all') {
-        clearHistory();
-      } else {
-        clearHistoryByTimeframe(value);
-      }
-      setIsDropdownOpen(false);
+    setModalConfig({ isOpen: true, value, label });
+    setIsDropdownOpen(false);
+  };
+
+  const executeClear = () => {
+    if (modalConfig.value === 'all') {
+      clearHistory();
+    } else {
+      clearHistoryByTimeframe(modalConfig.value);
     }
   };
 
@@ -166,6 +170,20 @@ export default function HistoryPage() {
           </div>
         </div>
       </PageContainer>
+
+      <ConfirmModal
+        isOpen={modalConfig.isOpen}
+        onClose={() => setModalConfig({ ...modalConfig, isOpen: false })}
+        onConfirm={executeClear}
+        title="Clear Search History"
+        message={
+          modalConfig.value === 'all'
+            ? "Are you sure you want to completely clear your search history? This action cannot be undone."
+            : `Are you sure you want to clear your search history for the ${modalConfig.label.toLowerCase()}?`
+        }
+        confirmText="Clear History"
+        confirmStyle="danger"
+      />
     </main>
   );
 }
