@@ -30,6 +30,12 @@ export async function search({ query, type = 'web', page = 1, signal }) {
     page: page.toString(),
   });
 
+  // Admin control: allow forcing the secondary key first
+  const primaryKeyPref = typeof window !== 'undefined' ? localStorage.getItem('nexa_primary_key') : null;
+  if (primaryKeyPref === '2') {
+    params.set('keyPref', '2');
+  }
+
   const response = await fetch(`/api/search?${params}`, { signal });
 
   if (!response.ok) {

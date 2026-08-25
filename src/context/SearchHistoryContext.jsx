@@ -44,6 +44,33 @@ export function SearchHistoryProvider({ children }) {
     setHistory([]);
   }, []);
 
+  const clearHistoryByTimeframe = useCallback((timeframe) => {
+    if (timeframe === 'all') {
+      setHistory([]);
+      return;
+    }
+
+    const now = Date.now();
+    let cutoff = 0;
+
+    switch (timeframe) {
+      case '15m':
+        cutoff = now - 15 * 60 * 1000;
+        break;
+      case '1h':
+        cutoff = now - 60 * 60 * 1000;
+        break;
+      case '24h':
+        cutoff = now - 24 * 60 * 60 * 1000;
+        break;
+      case '7d':
+        cutoff = now - 7 * 24 * 60 * 60 * 1000;
+        break;
+    }
+
+    setHistory((prev) => prev.filter((item) => item.timestamp < cutoff));
+  }, []);
+
   // Get recent searches (last N items, for homepage display)
   const getRecentSearches = useCallback(
     (count = 5) => {
@@ -54,7 +81,7 @@ export function SearchHistoryProvider({ children }) {
 
   return (
     <SearchHistoryContext.Provider
-      value={{ history, addToHistory, removeFromHistory, removeQueryFromHistory, clearHistory, getRecentSearches }}
+      value={{ history, addToHistory, removeFromHistory, removeQueryFromHistory, clearHistory, clearHistoryByTimeframe, getRecentSearches }}
     >
       {children}
     </SearchHistoryContext.Provider>

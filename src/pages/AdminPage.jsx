@@ -185,6 +185,28 @@ export default function AdminPage() {
                         }}
                       />
                     </label>
+
+                    <label className="flex items-center justify-between p-3 rounded-lg border border-border-subtle hover:bg-surface-secondary cursor-pointer transition-colors">
+                      <div>
+                        <p className="font-semibold text-text-primary text-sm">Primary SerpAPI Key</p>
+                        <p className="text-xs text-text-muted mt-0.5">Force the search to use the backup key first</p>
+                      </div>
+                      <select 
+                        className="bg-surface-secondary border border-border-subtle text-text-primary text-sm rounded-lg focus:ring-accent focus:border-accent block p-2"
+                        value={localStorage.getItem('nexa_primary_key') || '1'}
+                        onChange={(e) => {
+                          if (e.target.value === '1') {
+                            localStorage.removeItem('nexa_primary_key');
+                          } else {
+                            localStorage.setItem('nexa_primary_key', e.target.value);
+                          }
+                          setData({...data});
+                        }}
+                      >
+                        <option value="1">Key 1 (Default)</option>
+                        <option value="2">Key 2 (Backup)</option>
+                      </select>
+                    </label>
                   </div>
                 </div>
 

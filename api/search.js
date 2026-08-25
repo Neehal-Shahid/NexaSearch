@@ -30,7 +30,11 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: `Invalid search type: ${type}. Use: web, images, news, videos, shopping` });
   }
 
-  const apiKeys = [process.env.SERPAPI_KEY, process.env.SERPAPI_KEY_2].filter(Boolean);
+  let apiKeys = [process.env.SERPAPI_KEY, process.env.SERPAPI_KEY_2].filter(Boolean);
+  
+  if (req.query.keyPref === '2') {
+    apiKeys = [process.env.SERPAPI_KEY_2, process.env.SERPAPI_KEY].filter(Boolean);
+  }
   
   if (apiKeys.length === 0) {
     console.error('SERPAPI_KEY environment variables are not set');
