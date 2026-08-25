@@ -1,6 +1,19 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useSearchHistory } from '../../context/SearchHistoryContext';
+import { SEARCH_TYPES } from '../../constants';
+
+// Picks which tab a brand-new query (typed into this bar, not AI Mode's own
+// follow-up input) should land on. Staying on Images/Videos/News/Shopping is
+// a reasonable "keep browsing this result type" behavior, but AI Mode isn't
+// a results type — it's a chat thread — so silently keeping a new, unrelated
+// query pinned to 'ai' just leaves the user stuck looking at a stale
+// conversation with no indication their search did anything (see AiMode.jsx,
+// which only auto-responds when its chat history is empty or mid-question;
+// it doesn't restart for a new query while already populated).
+function resolveTypeForNewQuery(currentType) {
+  return currentType === SEARCH_TYPES.AI ? SEARCH_TYPES.WEB : currentType;
+}
 
 export default function SearchBar({ variant = 'hero', autoFocus = false }) {
   const navigate = useNavigate();
@@ -46,14 +59,14 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
     if (trimmed.length === 0) return;
 
     setIsFocused(false);
-    const type = searchParams.get('type') || 'web';
+    const type = resolveTypeForNewQuery(searchParams.get('type') || 'web');
     navigate(`/search?q=${encodeURIComponent(trimmed)}&type=${type}&page=1`);
   };
 
   const handleSuggestionClick = (suggestion) => {
     setQuery(suggestion);
     setIsFocused(false);
-    const type = searchParams.get('type') || 'web';
+    const type = resolveTypeForNewQuery(searchParams.get('type') || 'web');
     navigate(`/search?q=${encodeURIComponent(suggestion)}&type=${type}&page=1`);
   };
 

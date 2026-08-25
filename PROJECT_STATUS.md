@@ -14,6 +14,16 @@ Snapshot as of **2026-08-25**, based on the working tree at commit `872ab2f` + u
 - Admin usage dashboard (SerpAPI + Gemini account metrics).
 - Defensive rendering hardened after real white-screen crashes from inconsistent SerpAPI response shapes — most recently a class of these was fixed app-wide, see below.
 
+## Just fixed (2026-08-25, ninth pass) — new search from the search bar got stuck in AI Mode
+
+**Symptom reported**: while viewing AI Mode, typing a new unrelated query into the still-visible header search bar (e.g. "car images") and submitting it kept the user on the AI Mode tab. A real search *did* happen (visible if the user manually switched to the Images or All tab), but AI Mode itself showed no sign anything had changed.
+
+**Two compounding bugs, both fixed**:
+1. `SearchBar.jsx`'s `handleSubmit`/`handleSuggestionClick` reused whatever `type` was currently in the URL for every new query — reasonable for Images/Videos/News/Shopping (staying on a result-type tab while searching several topics in a row is a sensible workflow), but wrong for AI Mode, which isn't a results type the same way — it's a chat thread with no meaningful "these are the AI Mode results for this new query" view. Added `resolveTypeForNewQuery()`: a brand-new query submitted from the main search bar now resets to the default "All" (web) tab specifically when leaving `ai`, while every other tab keeps its existing sticky behavior unchanged.
+2. Independently, `AiMode.jsx` would have shown nothing for the new query even if the user *had* stayed on the AI tab: its auto-response effect only fires when the chat history is empty or ends on an unanswered user turn — neither is true once a previous conversation has already completed, so a new query with an already-populated chat silently did nothing. Fixed by detecting a real query change (via a ref tracking the previous query) and restarting the conversation fresh when it happens, rather than leaving the stale previous chat on screen with no indication a search occurred. This also covers indirect paths back into an already-mounted AI Mode (browser back/forward between two AI-mode search URLs, etc.), not just the search-bar case.
+
+`npm run build` clean; `resolveTypeForNewQuery` verified: `ai → web`, all other types pass through unchanged.
+
 ## Just fixed (2026-08-25, eighth pass) — admin "primary key" setting silently ignored in local dev
 
 **Symptom reported**: admin dashboard's "Primary SerpAPI Key" control set to Key 2, but both keys' usage kept climbing on the SerpAPI account dashboard as if the setting had no effect.

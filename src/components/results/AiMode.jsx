@@ -21,9 +21,30 @@ export default function AiMode({ data, query }) {
   }, [chatHistory, isTyping]);
 
   const fetchAttemptedRef = useRef(false);
+  const previousQueryRef = useRef(query);
 
   // Auto-trigger response if we arrived with an empty chat or a pending user question
   useEffect(() => {
+    // AiMode stays mounted across a query change (same /search route, just a
+    // new ?q=), so a genuinely new query means the existing chat is now
+    // stale and unrelated. Without this, neither branch below would ever
+    // fire again — chatHistory isn't empty and doesn't end on an unanswered
+    // user turn — so the component would silently do nothing for the new
+    // query, leaving the previous conversation on screen with no sign a
+    // search even happened.
+    if (previousQueryRef.current !== query) {
+      previousQueryRef.current = query;
+      fetchAttemptedRef.current = false;
+
+      if (chatHistory.length > 0) {
+        const freshHistory = [{ role: 'user', content: `Please provide a comprehensive AI overview for my search query: "${query}"` }];
+        fetchAttemptedRef.current = true;
+        setChatHistory(freshHistory);
+        fetchResponse(freshHistory);
+        return;
+      }
+    }
+
     if (chatHistory.length === 0 && data && !fetchAttemptedRef.current) {
       fetchAttemptedRef.current = true;
       // We don't have a user question yet, so we act as if the user asked their search query
