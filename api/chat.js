@@ -1,6 +1,23 @@
+import { isRateLimited, getClientIp } from './_lib/rateLimit.js';
+
+const MAX_PAYLOAD_CHARS = 20000;
+
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Best-effort per-IP throttle — see api/_lib/rateLimit.js for the caveats.
+  if (isRateLimited(`chat:${getClientIp(req)}`, 20)) {
+    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+  }
+
+  // This endpoint is an open proxy to Gemini — cap payload size so a direct
+  // call (bypassing the UI, which never sends anywhere near this much) can't
+  // run up API cost. Normal AI Mode/translation/currency requests are a few
+  // hundred to a few thousand characters at most.
+  if (JSON.stringify(req.body || {}).length > MAX_PAYLOAD_CHARS) {
+    return res.status(413).json({ error: 'Request payload is too large' });
   }
 
   const { messages, context, contents, systemInstruction } = req.body;

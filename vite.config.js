@@ -1,5 +1,6 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
+import { isAdultQuery } from './src/utils/moderation.js'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '');
@@ -15,6 +16,14 @@ export default defineConfig(({ mode }) => {
             const q = parsedUrl.searchParams.get('q') || '';
             const type = parsedUrl.searchParams.get('type') || 'web';
             const page = parsedUrl.searchParams.get('page') || '1';
+
+            // Mirrors the server-side moderation check in api/search.js so
+            // dev behavior matches production.
+            if (isAdultQuery(q)) {
+              res.statusCode = 403;
+              res.end(JSON.stringify({ error: 'This query is not permitted.' }));
+              return;
+            }
 
             const engineMap = {
               web: 'google',
@@ -71,6 +80,18 @@ export default defineConfig(({ mode }) => {
 
           // Add /api/admin local proxy to match the Vercel serverless function
           server.middlewares.use('/api/admin', async (req, res) => {
+            // Mirrors the ADMIN_SECRET gate in api/admin.js — see that file.
+            if (!env.ADMIN_SECRET) {
+              res.statusCode = 503;
+              res.end(JSON.stringify({ error: 'Admin dashboard is not configured' }));
+              return;
+            }
+            if (req.headers['x-admin-key'] !== env.ADMIN_SECRET) {
+              res.statusCode = 401;
+              res.end(JSON.stringify({ error: 'Invalid admin key' }));
+              return;
+            }
+
             const apiKeys = [env.SERPAPI_KEY, env.SERPAPI_KEY_2].filter(Boolean);
             if (apiKeys.length === 0) {
               res.statusCode = 500;

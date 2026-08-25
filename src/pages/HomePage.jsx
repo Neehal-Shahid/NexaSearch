@@ -1,4 +1,3 @@
-import { useNavigate } from 'react-router-dom';
 import Logo from '../components/ui/Logo';
 import SearchBar from '../components/search/SearchBar';
 import PageContainer from '../components/layout/PageContainer';

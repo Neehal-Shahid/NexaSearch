@@ -1,6 +1,25 @@
+import { isRateLimited, getClientIp } from './_lib/rateLimit.js';
+
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  if (isRateLimited(`admin:${getClientIp(req)}`, 10)) {
+    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+  }
+
+  // This endpoint exposes SerpAPI/Gemini account emails and usage data, so it
+  // must not be left open. There's no user/auth system in this project, so a
+  // single shared secret (set as the ADMIN_SECRET env var, never shipped to
+  // the client) is the simplest gate that doesn't require adding a backend.
+  const adminSecret = process.env.ADMIN_SECRET;
+  if (!adminSecret) {
+    console.error('ADMIN_SECRET environment variable is not set — admin dashboard is disabled');
+    return res.status(503).json({ error: 'Admin dashboard is not configured' });
+  }
+  if (req.headers['x-admin-key'] !== adminSecret) {
+    return res.status(401).json({ error: 'Invalid admin key' });
   }
 
   const apiKeys = [process.env.SERPAPI_KEY, process.env.SERPAPI_KEY_2].filter(Boolean);

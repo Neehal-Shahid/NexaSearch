@@ -2,6 +2,11 @@ import { useSavedResults } from '../../context/SavedResultsContext';
 
 export default function SaveButton({ result, type, size = 'md' }) {
   const { isResultSaved, saveResult, removeResult, savedResults } = useSavedResults();
+
+  // Without a link there's nothing stable to bookmark or dedupe by — several
+  // link-less results would otherwise all be treated as "the same" saved item.
+  if (!result?.link) return null;
+
   const saved = isResultSaved(result.link, type);
 
   const handleToggle = (e) => {

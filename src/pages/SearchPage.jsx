@@ -23,6 +23,7 @@ import ErrorState from '../components/feedback/ErrorState';
 import { useSearch } from '../hooks/useSearch';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { isAdultQuery, getRandomQuote } from '../utils/moderation';
+import { FEATURE_FLAGS } from '../constants';
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -34,7 +35,6 @@ export default function SearchPage() {
   const { data, loading, error, retry } = useSearch(isAdult ? '' : query, type, page);
   const { addToHistory } = useSearchHistory();
   const [aiOverviewData, setAiOverviewData] = useState(null);
-  const [isLoadingAi, setIsLoadingAi] = useState(false);
   const [quoteForAdult] = useState(() => isAdult ? getRandomQuote() : null);
 
   // Record search in history when results arrive
@@ -231,7 +231,7 @@ export default function SearchPage() {
                 />
               ) : type === 'ai' ? (
                 <div className="w-full">
-                  {localStorage.getItem('admin_disable_ai') === 'true' ? (
+                  {localStorage.getItem(FEATURE_FLAGS.DISABLE_AI) === 'true' ? (
                     <EmptyState
                       title="AI Features Disabled"
                       description="The administrator has temporarily disabled all AI features on Nexa."
@@ -249,7 +249,7 @@ export default function SearchPage() {
                         {type === 'web' && (
                           <>
                             {answerBox && <AnswerBox data={answerBox} />}
-                            {localStorage.getItem('admin_disable_ai') !== 'true' && aiOverviewData && <NexaOverview data={aiOverviewData} searchContext={data?.organic_results?.slice(0, 5).map(r => `Title: ${r.title}\nSnippet: ${r.snippet}`).join('\n\n')} query={query} />}
+                            {localStorage.getItem(FEATURE_FLAGS.DISABLE_AI) !== 'true' && aiOverviewData && <NexaOverview data={aiOverviewData} searchContext={data?.organic_results?.slice(0, 5).map(r => `Title: ${r.title}\nSnippet: ${r.snippet}`).join('\n\n')} query={query} />}
                           </>
                         )}
 
@@ -262,7 +262,7 @@ export default function SearchPage() {
                         )}
 
                         {/* Dynamic Intent-Based Inline Packs */}
-                        {type === 'web' && localStorage.getItem('admin_disable_media_packs') !== 'true' && packOrder.map(packId => {
+                        {type === 'web' && localStorage.getItem(FEATURE_FLAGS.DISABLE_MEDIA_PACKS) !== 'true' && packOrder.map(packId => {
                           if (packId === 'top_stories' && data?.top_stories && data.top_stories.length > 0) {
                             return (
                               <div key={packId} className="mb-8">

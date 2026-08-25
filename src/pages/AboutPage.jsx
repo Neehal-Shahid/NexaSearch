@@ -1,7 +1,13 @@
+import { useEffect } from 'react';
 import PageContainer from '../components/layout/PageContainer';
 import Logo from '../components/ui/Logo';
 
 export default function AboutPage() {
+  useEffect(() => {
+    document.title = 'About — Nexa Search';
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <main className="flex-1">
       <PageContainer className="py-12">

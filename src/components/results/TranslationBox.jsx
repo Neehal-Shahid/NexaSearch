@@ -10,18 +10,21 @@ const LANGUAGES = [
 ].sort();
 
 export default function TranslationBox({ data }) {
-  const [sourceText, setSourceText] = useState(data.source.text);
-  const [sourceLang, setSourceLang] = useState(data.source.language || 'English');
-  const [targetLang, setTargetLang] = useState(data.target.language || 'Urdu');
-  const [translatedText, setTranslatedText] = useState(data.target.text);
+  // AnswerBox only guarantees data.source/data.target exist, not their
+  // sub-fields — guard .text/.language individually so a partial shape
+  // (e.g. { source: {} }) renders empty inputs instead of "undefined".
+  const [sourceText, setSourceText] = useState(data.source?.text || '');
+  const [sourceLang, setSourceLang] = useState(data.source?.language || 'English');
+  const [targetLang, setTargetLang] = useState(data.target?.language || 'Urdu');
+  const [translatedText, setTranslatedText] = useState(data.target?.text || '');
   const [isTranslating, setIsTranslating] = useState(false);
-  
+
   // Update local state when data changes (from URL params)
   useEffect(() => {
-    setSourceText(data.source.text);
-    setSourceLang(data.source.language || 'English');
-    setTargetLang(data.target.language || 'Urdu');
-    setTranslatedText(data.target.text);
+    setSourceText(data.source?.text || '');
+    setSourceLang(data.source?.language || 'English');
+    setTargetLang(data.target?.language || 'Urdu');
+    setTranslatedText(data.target?.text || '');
   }, [data]);
 
   const performTranslation = async (text, from, to) => {

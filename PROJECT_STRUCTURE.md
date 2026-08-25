@@ -5,9 +5,15 @@ Full map of the repository. Excludes `node_modules/`, `dist/` (build output), `.
 ```
 Nexa/
 ├── api/                          # Vercel serverless functions (production backend)
-│   ├── search.js                 # GET proxy → SerpAPI, dual-key rotation, geolocation, 5min cache headers
-│   ├── chat.js                   # POST proxy → Gemini generateContent, model fallback chain
-│   └── admin.js                  # GET → aggregated SerpAPI + Gemini account/usage stats (NO AUTH)
+│   ├── search.js                 # GET proxy → SerpAPI, dual-key rotation, geolocation, 5min cache headers,
+│   │                              #   server-side moderation check, rate-limited, query length capped
+│   ├── chat.js                   # POST proxy → Gemini generateContent, model fallback chain, rate-limited,
+│   │                              #   payload size capped
+│   ├── admin.js                  # GET → aggregated SerpAPI + Gemini account/usage stats — requires
+│   │                              #   x-admin-key header matching ADMIN_SECRET env var, rate-limited
+│   └── _lib/
+│       └── rateLimit.js          # Shared in-memory per-IP rate limiter (best-effort, no DB — see
+│                                  #   DECISIONS.md); underscore-prefixed so Vercel excludes it from routing
 │
 ├── src/
 │   ├── main.jsx                  # React root render (StrictMode + App)
@@ -32,7 +38,7 @@ Nexa/
 │   │
 │   ├── constants/
 │   │   └── index.js              # SEARCH_TYPES, SEARCH_TABS, TRENDING_SEARCHES, storage keys,
-│   │                              #   HISTORY_MAX_ITEMS, RESULTS_PER_PAGE
+│   │                              #   HISTORY_MAX_ITEMS, RESULTS_PER_PAGE, FEATURE_FLAGS (localStorage keys)
 │   │
 │   ├── utils/
 │   │   ├── formatters.js         # extractDomain, formatDate, formatHistoryDate, truncateText, formatDuration
@@ -49,7 +55,8 @@ Nexa/
 │   │   ├── AboutPage.jsx         # "/about" — static: features, tech stack, disclaimer
 │   │   ├── PrivacyPage.jsx       # "/privacy" — static privacy policy text
 │   │   ├── TermsPage.jsx         # "/terms" — static terms of service text
-│   │   └── AdminPage.jsx         # "/admin" — API usage dashboard + local feature-flag toggles (NO AUTH)
+│   │   └── AdminPage.jsx         # "/admin" — password-gated (ADMIN_SECRET) API usage dashboard +
+│   │                              #   local feature-flag toggles
 │   │
 │   └── components/
 │       ├── layout/
@@ -112,7 +119,9 @@ Nexa/
 ├── postcss.config.js
 ├── .oxlintrc.json                # oxlint (Rust-based linter) config
 ├── package.json                  # deps: react, react-dom, react-router-dom; devDeps: vite, tailwind, postcss
-├── .env                          # SERPAPI_KEY, SERPAPI_KEY_2, GEMINI_API_KEY (gitignored, not committed)
+├── .env                          # SERPAPI_KEY, SERPAPI_KEY_2, GEMINI_API_KEY, ADMIN_SECRET
+│                                  #   (gitignored, not committed — ADMIN_SECRET must also be set in the
+│                                  #   Vercel project's env vars for /admin to work in production)
 │
 ├── README.md                     # Default Vite/React template boilerplate readme
 ├── nexa_case_study.md            # Developer's own product pitch/case-study writeup

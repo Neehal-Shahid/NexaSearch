@@ -26,7 +26,7 @@ export default function CustomSelect({ value, options, onChange, ariaLabel, clas
     }
   }, [isOpen]);
 
-  const filteredOptions = options.filter(option => 
+  const filteredOptions = (Array.isArray(options) ? options : []).filter(option =>
     option.toLowerCase().includes(searchQuery.toLowerCase())
   );
 

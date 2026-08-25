@@ -1,7 +1,10 @@
 // Vercel Serverless Function — proxies search requests to SerpAPI
 // The API key is read from server-side environment variables only
+import { isAdultQuery } from '../src/utils/moderation.js';
+import { isRateLimited, getClientIp } from './_lib/rateLimit.js';
 
 const SERPAPI_BASE = 'https://serpapi.com/search.json';
+const MAX_QUERY_LENGTH = 200;
 
 const ENGINE_MAP = {
   web: 'google',
@@ -18,11 +21,28 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Best-effort per-IP throttle — see api/_lib/rateLimit.js for the caveats.
+  if (isRateLimited(`search:${getClientIp(req)}`, 30)) {
+    return res.status(429).json({ error: 'Too many requests. Please slow down.' });
+  }
+
   const { q, type = 'web', page = '1' } = req.query;
 
   // Validate query
   if (!q || q.trim().length === 0) {
     return res.status(400).json({ error: 'Search query is required' });
+  }
+
+  if (q.trim().length > MAX_QUERY_LENGTH) {
+    return res.status(400).json({ error: 'Search query is too long' });
+  }
+
+  // Server-side enforcement of the same moderation check the client already
+  // runs (src/pages/SearchPage.jsx). The client-side check alone is trivially
+  // bypassed by calling this endpoint directly — this closes that gap without
+  // needing a real content-moderation service.
+  if (isAdultQuery(q)) {
+    return res.status(403).json({ error: 'This query is not permitted.' });
   }
 
   const engine = ENGINE_MAP[type];

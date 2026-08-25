@@ -1,25 +1,67 @@
 import { useEffect, useState } from 'react';
 import PageContainer from '../components/layout/PageContainer';
+import Toast from '../components/ui/Toast';
 import { clearSearchCache } from '../api/searchClient';
+import { FEATURE_FLAGS } from '../constants';
+
+const ADMIN_KEY_SESSION_STORAGE = 'nexa_admin_key';
 
 export default function AdminPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Gate: /api/admin exposes account emails and usage data, so it requires a
+  // shared secret (ADMIN_SECRET env var) sent as the x-admin-key header.
+  // The key is kept in sessionStorage only (cleared when the tab closes),
+  // not localStorage, since it's closer to a credential than a preference.
+  const [adminKey, setAdminKey] = useState(() => sessionStorage.getItem(ADMIN_KEY_SESSION_STORAGE) || '');
+  const [authed, setAuthed] = useState(false);
+  const [keyInput, setKeyInput] = useState('');
+  const [authError, setAuthError] = useState(null);
+
+  // Feature flags — real state instead of reading localStorage inline in JSX
+  // on every render (which previously needed a "force re-render" hack to
+  // reflect changes at all).
+  const [disableAi, setDisableAi] = useState(() => localStorage.getItem(FEATURE_FLAGS.DISABLE_AI) === 'true');
+  const [disableMediaPacks, setDisableMediaPacks] = useState(() => localStorage.getItem(FEATURE_FLAGS.DISABLE_MEDIA_PACKS) === 'true');
+  const [primaryKeyPref, setPrimaryKeyPref] = useState(() => localStorage.getItem(FEATURE_FLAGS.PRIMARY_KEY_PREF) || '1');
+
+  const [toastMessage, setToastMessage] = useState(null);
+
   useEffect(() => {
     document.title = 'Admin Dashboard — Nexa Search';
     window.scrollTo(0, 0);
-    fetchAdminData();
+    if (adminKey) {
+      fetchAdminData(adminKey);
+    } else {
+      setLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchAdminData = async () => {
+  const fetchAdminData = async (key) => {
     try {
       setLoading(true);
       setError(null);
-      const res = await fetch('/api/admin');
-      if (!res.ok) throw new Error(`Server returned ${res.status}`);
+      setAuthError(null);
+      const res = await fetch('/api/admin', { headers: { 'x-admin-key': key } });
+
+      if (res.status === 401) {
+        sessionStorage.removeItem(ADMIN_KEY_SESSION_STORAGE);
+        setAdminKey('');
+        setAuthed(false);
+        setAuthError('Invalid admin key.');
+        return;
+      }
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || `Server returned ${res.status}`);
+      }
+
       const json = await res.json();
+      setAuthed(true);
       setData(json);
     } catch (err) {
       setError(err.message);
@@ -27,6 +69,66 @@ export default function AdminPage() {
       setLoading(false);
     }
   };
+
+  const handleUnlock = (e) => {
+    e.preventDefault();
+    if (!keyInput.trim()) return;
+    sessionStorage.setItem(ADMIN_KEY_SESSION_STORAGE, keyInput.trim());
+    setAdminKey(keyInput.trim());
+    fetchAdminData(keyInput.trim());
+  };
+
+  const toggleFlag = (flagKey, currentlyEnabled, setter) => {
+    if (currentlyEnabled) {
+      localStorage.removeItem(flagKey);
+    } else {
+      localStorage.setItem(flagKey, 'true');
+    }
+    setter(!currentlyEnabled);
+  };
+
+  const handlePrimaryKeyChange = (value) => {
+    if (value === '1') {
+      localStorage.removeItem(FEATURE_FLAGS.PRIMARY_KEY_PREF);
+    } else {
+      localStorage.setItem(FEATURE_FLAGS.PRIMARY_KEY_PREF, value);
+    }
+    setPrimaryKeyPref(value);
+  };
+
+  // Not authenticated yet — show the key gate instead of the dashboard.
+  if (!authed) {
+    return (
+      <main className="flex-1 bg-background min-h-screen flex items-center justify-center">
+        <PageContainer className="py-8 max-w-sm">
+          <form onSubmit={handleUnlock} className="bg-surface border border-border-subtle rounded-xl p-6 shadow-sm space-y-4">
+            <div>
+              <h1 className="text-lg font-bold text-text-primary">Admin Access</h1>
+              <p className="text-sm text-text-muted mt-1">Enter the admin key to view the dashboard.</p>
+            </div>
+            <input
+              type="password"
+              value={keyInput}
+              onChange={(e) => setKeyInput(e.target.value)}
+              placeholder="Admin key"
+              autoFocus
+              className="w-full bg-background border border-border-subtle rounded-lg py-2.5 px-3 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent"
+            />
+            {(authError || (error && !loading)) && (
+              <p className="text-sm text-red-500">{authError || error}</p>
+            )}
+            <button
+              type="submit"
+              disabled={loading || !keyInput.trim()}
+              className="w-full px-4 py-2.5 bg-accent text-white text-sm font-bold rounded-lg hover:bg-accent-hover transition-colors disabled:opacity-50"
+            >
+              {loading ? 'Checking...' : 'Unlock'}
+            </button>
+          </form>
+        </PageContainer>
+      </main>
+    );
+  }
 
   return (
     <main className="flex-1 bg-background min-h-screen">
@@ -36,8 +138,8 @@ export default function AdminPage() {
             <h1 className="text-2xl font-bold text-text-primary">Admin Overview</h1>
             <p className="text-sm text-text-muted mt-1">Platform analytics & API limits</p>
           </div>
-          <button 
-            onClick={fetchAdminData}
+          <button
+            onClick={() => fetchAdminData(adminKey)}
             disabled={loading}
             className="p-2 bg-surface rounded-lg border border-border-subtle hover:bg-surface-secondary transition-colors group disabled:opacity-50"
             title="Refresh Data"
@@ -55,7 +157,7 @@ export default function AdminPage() {
         ) : error ? (
           <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6 text-center">
             <p className="text-red-500 font-medium mb-4">Error loading dashboard: {error}</p>
-            <button onClick={fetchAdminData} className="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors">
+            <button onClick={() => fetchAdminData(adminKey)} className="px-4 py-2 bg-red-500 text-white text-sm font-bold rounded-lg hover:bg-red-600 transition-colors">
               Try Again
             </button>
           </div>
@@ -112,7 +214,7 @@ export default function AdminPage() {
                         {acc.account_status || 'Active'}
                       </span>
                     </div>
-                    
+
                     <div className="space-y-3 mt-6 pt-5 border-t border-border-subtle relative z-10">
                       <div className="flex justify-between items-center text-sm">
                         <span className="text-text-secondary font-medium">Service Plan</span>
@@ -138,31 +240,26 @@ export default function AdminPage() {
 
             <div className="space-y-4 pt-8 border-t border-border-subtle mt-10">
               <h2 className="text-lg font-bold text-text-primary mb-4">Local Platform Controls</h2>
+              <p className="text-xs text-text-muted -mt-3 mb-4">
+                These toggles are stored in this browser only — they don't affect any other visitor.
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                
+
                 {/* Feature Flags */}
                 <div className="bg-surface border border-border-subtle rounded-xl p-6 shadow-sm">
                   <h3 className="text-md font-bold text-text-primary mb-4">Feature Flags</h3>
-                  
+
                   <div className="space-y-4">
                     <label className="flex items-center justify-between p-3 rounded-lg border border-border-subtle hover:bg-surface-secondary cursor-pointer transition-colors">
                       <div>
                         <p className="font-semibold text-text-primary text-sm">Enable AI Mode</p>
                         <p className="text-xs text-text-muted mt-0.5">Show AI Overview and AI Chat features</p>
                       </div>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="w-4 h-4 text-accent rounded focus:ring-accent accent-accent"
-                        checked={localStorage.getItem('admin_disable_ai') !== 'true'}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            localStorage.removeItem('admin_disable_ai');
-                          } else {
-                            localStorage.setItem('admin_disable_ai', 'true');
-                          }
-                          // Force re-render hack
-                          setData({...data});
-                        }}
+                        checked={!disableAi}
+                        onChange={() => toggleFlag(FEATURE_FLAGS.DISABLE_AI, disableAi, setDisableAi)}
                       />
                     </label>
 
@@ -171,18 +268,11 @@ export default function AdminPage() {
                         <p className="font-semibold text-text-primary text-sm">Enable Inline Media Packs</p>
                         <p className="text-xs text-text-muted mt-0.5">Show Images, News, and Videos inside Web results</p>
                       </div>
-                      <input 
-                        type="checkbox" 
+                      <input
+                        type="checkbox"
                         className="w-4 h-4 text-accent rounded focus:ring-accent accent-accent"
-                        checked={localStorage.getItem('admin_disable_media_packs') !== 'true'}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            localStorage.removeItem('admin_disable_media_packs');
-                          } else {
-                            localStorage.setItem('admin_disable_media_packs', 'true');
-                          }
-                          setData({...data});
-                        }}
+                        checked={!disableMediaPacks}
+                        onChange={() => toggleFlag(FEATURE_FLAGS.DISABLE_MEDIA_PACKS, disableMediaPacks, setDisableMediaPacks)}
                       />
                     </label>
 
@@ -191,17 +281,10 @@ export default function AdminPage() {
                         <p className="font-semibold text-text-primary text-sm">Primary SerpAPI Key</p>
                         <p className="text-xs text-text-muted mt-0.5">Force the search to use the backup key first</p>
                       </div>
-                      <select 
+                      <select
                         className="bg-surface-secondary border border-border-subtle text-text-primary text-sm rounded-lg focus:ring-accent focus:border-accent block p-2"
-                        value={localStorage.getItem('nexa_primary_key') || '1'}
-                        onChange={(e) => {
-                          if (e.target.value === '1') {
-                            localStorage.removeItem('nexa_primary_key');
-                          } else {
-                            localStorage.setItem('nexa_primary_key', e.target.value);
-                          }
-                          setData({...data});
-                        }}
+                        value={primaryKeyPref}
+                        onChange={(e) => handlePrimaryKeyChange(e.target.value)}
                       >
                         <option value="1">Key 1 (Default)</option>
                         <option value="2">Key 2 (Backup)</option>
@@ -214,14 +297,14 @@ export default function AdminPage() {
                 <div className="bg-surface border border-border-subtle rounded-xl p-6 shadow-sm">
                   <h3 className="text-md font-bold text-text-primary mb-4">Memory Cache</h3>
                   <p className="text-sm text-text-secondary mb-4 leading-relaxed">
-                    Nexa uses an aggressive in-memory caching system to reduce API calls to SerpApi. 
+                    Nexa uses an aggressive in-memory caching system to reduce API calls to SerpApi.
                     If you are experiencing stale results or want to force fresh fetches, you can purge the global cache here.
                   </p>
-                  
-                  <button 
+
+                  <button
                     onClick={() => {
                       clearSearchCache();
-                      alert('Global search cache purged successfully!');
+                      setToastMessage('Global search cache purged successfully!');
                     }}
                     className="w-full sm:w-auto px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2"
                   >
@@ -237,6 +320,8 @@ export default function AdminPage() {
           </div>
         )}
       </PageContainer>
+
+      {toastMessage && <Toast message={toastMessage} onClose={() => setToastMessage(null)} />}
     </main>
   );
 }

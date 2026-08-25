@@ -37,5 +37,14 @@ export const HISTORY_MAX_ITEMS = 50;
 export const SAVED_STORAGE_KEY = 'nexa_saved_results';
 export const HISTORY_STORAGE_KEY = 'nexa_search_history';
 
+// Per-browser feature-flag localStorage keys, set from AdminPage's
+// "Local Platform Controls" and read wherever the flag applies.
+// Centralized here so a typo in the key string can't silently break a flag.
+export const FEATURE_FLAGS = {
+  DISABLE_AI: 'admin_disable_ai',
+  DISABLE_MEDIA_PACKS: 'admin_disable_media_packs',
+  PRIMARY_KEY_PREF: 'nexa_primary_key',
+};
+
 // Results per page
 export const RESULTS_PER_PAGE = 10;

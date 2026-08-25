@@ -29,6 +29,31 @@ Snapshot as of **2026-08-25**, based on the working tree at commit `872ab2f` + u
 
 Verified with `npm run build` — clean build, no errors.
 
+## Just fixed (2026-08-25, second pass) — audit cleanup
+
+Following a full codebase audit, the fixable items that didn't require adding a real backend/database were addressed (this app remains frontend + Vercel serverless only):
+
+**Security / cost exposure**
+- **`/admin` now requires a shared secret.** `api/admin.js` checks an `x-admin-key` header against the new `ADMIN_SECRET` env var (added as an empty placeholder in `.env` — **you must set a real value locally and in the Vercel project's env vars, or the endpoint returns 503 "not configured"**). `AdminPage.jsx` now shows a password-gate screen before the dashboard; the key is kept in `sessionStorage` (cleared on tab close), not `localStorage`. `vite.config.js`'s dev middleware mirrors the same check for local-dev parity.
+- **Server-side moderation enforcement.** `api/search.js` now also runs `isAdultQuery()` (imported from `src/utils/moderation.js`) before proxying to SerpAPI, returning 403 if flagged — closes the previous gap where calling `/api/search` directly bypassed the client-side-only check entirely. `vite.config.js`'s dev middleware mirrors this too. Still a soft keyword filter, not real moderation — see DECISIONS.md.
+- **Best-effort rate limiting + input caps**, new `api/_lib/rateLimit.js` (in-memory, per-warm-instance — no DB, so not reliable across scale-out, but stops the common single-instance abuse case at zero infra cost): `/api/search` (30 req/min/IP, query capped at 200 chars), `/api/chat` (20 req/min/IP, payload capped at 20,000 chars — this endpoint is otherwise an open proxy to Gemini), `/api/admin` (10 req/min/IP).
+
+**Correctness / dead code**
+- `TranslationBox.jsx` now guards `data.source?.text`/`.language` and `data.target?.text`/`.language` individually instead of assuming they exist.
+- `CustomSelect.jsx` now guards `options` with `Array.isArray()` before filtering.
+- `SaveButton.jsx` now returns `null` if `result.link` is missing, instead of risking mis-deduping link-less saved items.
+- `AdminPage.jsx`'s "force re-render hack" (`setData({...data})` to force a re-render after a `localStorage` write) is gone — feature flags are now real React state, updated through proper setters.
+- `alert()` on "Purge Global Cache" replaced with the app's existing (previously unused/orphaned) `Toast` component.
+- Removed dead code: unused `useNavigate` import in `HomePage.jsx`, unused `isLoadingAi` state in `SearchPage.jsx`.
+- `AboutPage.jsx` now sets `document.title`/scrolls to top on mount, matching `PrivacyPage.jsx`/`TermsPage.jsx`.
+- Feature-flag `localStorage` keys (`admin_disable_ai`, `admin_disable_media_packs`, `nexa_primary_key`) centralized into `FEATURE_FLAGS` in `src/constants/index.js`, replacing scattered magic strings across `AdminPage.jsx`, `SearchPage.jsx`, `SearchTabs.jsx`, `searchClient.js`.
+
+**Deliberately left alone** (real but higher-risk to touch without behavior changes — see DECISIONS.md):
+- The three duplicated Gemini fallback-chain implementations (`AiMode`, `CurrencyConverterBox`, `TranslationBox`) — **not** unified. `AiMode`'s fallback only actually triggers on a network-level fetch failure (it rethrows and stops on any HTTP-level error response), while `CurrencyConverterBox`/`TranslationBox` fall back to the second model on HTTP errors too. Unifying them would silently change `AiMode`'s behavior, which wasn't asked for.
+- The two markdown parsers (`utils/markdown.js` vs. `NexaOverview.jsx`'s inline formatter) — not merged, since they render different feature sets today and merging risks visible layout/formatting changes in one of the two contexts.
+
+Verified: `npm run build` (clean), plus manual smoke tests — `/api/admin` → 503 with no `ADMIN_SECRET` set, `/api/search?q=porn` → 403, `/api/search?q=` → 400, `/api/search?q=hello+world` → 200, and a standalone check that the rate limiter trips exactly at request #31 for a limit of 30.
+
 ## Known bugs (unresolved)
 
 1. **Translation box re-search bug** — documented by the developer directly in `prompt.md` at repo root (their own bug report, not yet acted on as of this snapshot). Summary: after the first search producing a translation box + AI overview + web results, editing the translation input and pressing enter is expected to update *only* the translation pane. Instead it appears to trigger a full page/search refresh — the search bar still shows the original query, the AI overview and translation stay stale/unchanged, but the underlying SERP web results silently change to reflect the new translation text. This points to `TranslationBox.jsx`'s input handling incorrectly triggering (or interacting with) the parent search/navigation flow instead of staying self-contained. **Not yet fixed** — no corresponding commit found in recent history.
@@ -36,14 +61,13 @@ Verified with `npm run build` — clean build, no errors.
 ## Known gaps / incomplete features
 
 - **AI Overview pagination is unimplemented.** `SearchPage.jsx` has explicit logic acknowledging that when SerpAPI returns only a `page_token` (no `text_blocks`) for `ai_overview`, that token should be used to fetch the rest — the code comment says "Handle token logic later." Currently, such overviews simply don't render further content.
-- **`AdminPage`/`api/admin.js` have no authentication.** Anyone with the URL can view SerpAPI/Gemini account emails and usage data and flip feature flags (which are per-browser only — see DECISIONS.md). This is an accepted-but-unaddressed risk for a portfolio project; would need real auth before this app (or its API keys) is treated as anything beyond a throwaway demo.
-- **Content moderation (`isAdultQuery`) is a soft, trivially-bypassable client-side filter**, not a real safety boundary — by design for now, but worth remembering if scope expands.
+- **Content moderation (`isAdultQuery`) is still a soft keyword filter**, not real moderation — it's now enforced both client- and server-side (see above), so it's no longer trivially bypassed by calling `/api/search` directly, but it's still just keyword matching, not a real safety/compliance boundary.
+- **Rate limiting is best-effort, in-memory, per-warm-instance** — there's no database/Redis in this project, so it doesn't hold under real multi-instance scale-out on Vercel. It's a meaningful improvement over having nothing, not a substitute for a real rate-limiting service if this app ever gets real traffic.
 - **Portfolio-only hardcoded demo hack**: `SearchPage.jsx` synthesizes a fake translation `answer_box` when the query contains both "translate" and "urdu" and SerpAPI didn't return a real one — this is explicitly a demo-polish hack, not general logic, and only fires for that specific phrase pattern.
-- Two independent markdown renderers (`utils/markdown.js` vs. `NexaOverview.jsx`'s inline formatter) and three duplicated Gemini-call-with-fallback implementations (`AiMode`, `CurrencyConverterBox`, `TranslationBox`) — functional today, but flagged as consolidation candidates in DECISIONS.md.
-- `AboutPage.jsx` is missing the `document.title`/scroll-to-top effect that `PrivacyPage.jsx` and `TermsPage.jsx` both have — minor polish inconsistency.
-- `HomePage.jsx` has an unused `useNavigate` import (dead code, harmless).
+- Two independent markdown renderers (`utils/markdown.js` vs. `NexaOverview.jsx`'s inline formatter) and three duplicated Gemini-call-with-fallback implementations (`AiMode`, `CurrencyConverterBox`, `TranslationBox`) — functional today, deliberately left un-unified (see "Just fixed" above and DECISIONS.md).
 - Privacy/Terms pages have a hardcoded "Last Updated: August 2026" string — will silently go stale since it's not derived from anything.
 - Dev-only scratch files at repo root (`list_models.mjs`, `scratch_test.mjs`, `test_currency.mjs`, `test_gemini.mjs`, `test_logo.html`, `test_serp.cjs`) are ad-hoc debugging scripts, not part of the build — safe to ignore or clean up, not referenced by `src/`.
+- **`ADMIN_SECRET` must be set for `/admin` to work at all** — it's an empty placeholder in `.env` and not yet set on Vercel's production env vars. Until it's set, `/api/admin` returns 503 everywhere, including for you.
 
 ## Recent development activity (from git log, most recent first)
 
@@ -68,7 +92,8 @@ Verified with `npm run build` — clean build, no errors.
 
 ## Suggested next steps (not yet actioned — for planning only)
 
-1. Fix the translation-box re-search bug (`prompt.md`) — highest priority since it's an active, developer-confirmed regression.
-2. Decide whether `/admin` needs real auth or should be removed/hidden before any wider sharing of this project.
+1. **Set `ADMIN_SECRET`** in `.env` (local) and in the Vercel project's environment variables (production) — `/admin` is non-functional (503) until this is done.
+2. Fix the translation-box re-search bug (`prompt.md`) — highest priority active bug.
 3. Implement or explicitly drop the AI Overview `page_token` pagination TODO.
-4. Consider auditing other `.map()` calls over SerpAPI/Gemini-sourced arrays for the same "assumes every entry is a non-null object" gap that caused the `NexaOverview` crash — the new `ErrorBoundary` will now catch any that remain, but fixing them at the source is still better than relying on the fallback UI.
+4. Consider auditing other `.map()` calls over SerpAPI/Gemini-sourced arrays for the same "assumes every entry is a non-null object" gap that caused the `NexaOverview` crash — the `ErrorBoundary` will now catch any that remain, but fixing them at the source is still better than relying on the fallback UI.
+5. If this app ever needs real (not best-effort) rate limiting or admin auth beyond a shared secret, that requires actual infrastructure (e.g. Vercel KV/Upstash for a shared rate-limit store, or a real auth provider) — out of scope while this stays a no-backend, no-database, Vercel-only project.

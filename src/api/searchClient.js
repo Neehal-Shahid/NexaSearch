@@ -2,6 +2,7 @@
  * Search API client — fetches from our own /api/search proxy.
  * Never touches SerpAPI directly. No API key in this file.
  */
+import { FEATURE_FLAGS } from '../constants';
 
 const MAX_CACHE_SIZE = 50;
 const cache = new Map();
@@ -31,7 +32,7 @@ export async function search({ query, type = 'web', page = 1, signal }) {
   });
 
   // Admin control: allow forcing the secondary key first
-  const primaryKeyPref = typeof window !== 'undefined' ? localStorage.getItem('nexa_primary_key') : null;
+  const primaryKeyPref = typeof window !== 'undefined' ? localStorage.getItem(FEATURE_FLAGS.PRIMARY_KEY_PREF) : null;
   if (primaryKeyPref === '2') {
     params.set('keyPref', '2');
   }

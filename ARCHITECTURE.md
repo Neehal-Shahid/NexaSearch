@@ -54,9 +54,18 @@ Two providers wrap the whole tree in `App.jsx`: `SearchHistoryProvider` → `Sav
 
 Both `CurrencyConverterBox.jsx` and `TranslationBox.jsx` also independently call `/api/chat` with the same two-model fallback pattern — this logic exists in three separate places (`AiMode`, `CurrencyConverterBox`, `TranslationBox`), not a shared hook.
 
-## Feature flags — client-side, per-browser, undocumented outside AdminPage
+## API hardening (added 2026-08-25)
 
-Three plain `localStorage` keys act as feature toggles, set from `AdminPage.jsx`'s "Local Platform Controls" section and read inline (not via context) wherever needed:
+All three `/api/*` functions got a defense-in-depth pass, staying within the "no backend, no database, Vercel-only" constraint:
+
+- **`api/_lib/rateLimit.js`** — a shared, in-memory, per-IP sliding-window limiter (`isRateLimited(key, limit)`), applied to `/api/search` (30/min), `/api/chat` (20/min), `/api/admin` (10/min). It's best-effort: state lives in a module-level `Map` inside one warm serverless instance, so it doesn't hold under multi-instance scale-out and resets on cold start. See DECISIONS.md for why this is the right trade-off given the project's constraints.
+- **`api/search.js`** now also validates query length (≤200 chars) and re-runs `isAdultQuery()` (imported from `src/utils/moderation.js`) server-side — closes the gap where calling `/api/search` directly bypassed `SearchPage.jsx`'s client-side-only check.
+- **`api/chat.js`** now caps request payload size (≤20,000 chars) — this endpoint is otherwise an open proxy to Gemini, so an unbounded payload from a direct call could run up real cost.
+- **`api/admin.js`** now requires an `x-admin-key` header matching the `ADMIN_SECRET` env var; returns 503 if that env var isn't configured (fails closed, not open), 401 if the key doesn't match. `AdminPage.jsx` gates the dashboard behind a key-entry screen, storing the key in `sessionStorage`. `vite.config.js`'s dev middleware mirrors both the moderation check and the admin-secret check for local/production parity.
+
+## Feature flags — client-side, per-browser, centralized as constants
+
+Three plain `localStorage` keys act as feature toggles (`FEATURE_FLAGS` in `src/constants/index.js`), set from `AdminPage.jsx`'s "Local Platform Controls" section and read inline (not via context) wherever needed:
 
 | key | set from | read from | effect |
 |---|---|---|---|
