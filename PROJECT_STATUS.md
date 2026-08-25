@@ -14,6 +14,18 @@ Snapshot as of **2026-08-25**, based on the working tree at commit `872ab2f` + u
 - Admin usage dashboard (SerpAPI + Gemini account metrics).
 - Defensive rendering hardened after real white-screen crashes from inconsistent SerpAPI response shapes — most recently a class of these was fixed app-wide, see below.
 
+## New design (2026-08-25, sixteenth pass) — video redesign round 2 + real blurry-thumbnail fix
+
+User feedback on the fifteenth-pass redesign: liked the News tab, but Video "so basic and simple just like old" (the first video pass only changed borders/shadows, not layout — it never got the same structural treatment News did), thumbnails "so bad and blurry", and Images was fine as-is (left untouched this pass, re-verified no regression).
+
+**Blurry thumbnails — root cause confirmed with real data, not assumed**: fetched an actual video thumbnail SerpAPI returns and measured it directly — **148×83 pixels, 2.8KB**. Stretched to fill a ~380px-wide grid tile, that's roughly 2.5x upscaling, which is exactly what blur looks like. This wasn't introduced by the redesign, but the more spacious/premium tile treatment made the mismatch far more visible than the old compact boxed cards did. Fixed: since most video results are YouTube links, `VideoResultCard.jsx` now extracts the video ID from `result.link` and requests YouTube's own thumbnail directly (`img.youtube.com/vi/{id}/sddefault.jpg`, 640×480) instead of SerpAPI's tiny cached copy, falling back to `hqdefault.jpg` then finally SerpAPI's original thumbnail if both fail. Deliberately **not** using `maxresdefault` as the first attempt — verified this is a real YouTube quirk, not a hypothetical: videos without a true high-res thumbnail return a small gray placeholder image at HTTP 200 (not an error), which an `onError`-based fallback chain can't detect. `sddefault` doesn't have this problem.
+
+**Video redesign round 2 — real structural change, not just restyling**: `VideoResultGrid.jsx`'s default (Videos tab) variant now mirrors the pattern that made News work: one **featured** video (large thumbnail, title and snippet always visible rather than hover-only, prominent always-partially-visible play button) followed by the rest in the refined tile grid from round 1, below a divider. New `featured` variant added to `VideoResultCard.jsx` for this.
+
+**Bonus fix found while rewriting the duration badge logic**: the old code read `result.length` for video duration — the real field SerpAPI returns is `result.duration` (verified against live data for both `inline_videos` and `video_results`). `result.length` is always `undefined`, so the duration badge likely never rendered at all before this pass, on either the old or the round-1 redesign. Now reads `result.duration` (with `result.length` kept as a fallback, in case some other engine variant does use that name).
+
+**Verified with the same Playwright visual-testing approach from the fifteenth pass** (not just a clean build): screenshotted the redesigned Videos tab and confirmed — thumbnails visibly sharp, duration badges now showing (`30:49`, `10:22`, etc., previously always blank), featured+grid hierarchy rendering correctly. Also re-screenshotted Images to confirm no regression from being left untouched. `npm run build` clean throughout.
+
 ## New design (2026-08-25, fifteenth pass) — Video/Image/News packs redesigned away from generic cards
 
 **Requested**: "modern clean, unique layouts... not basic card styles" for the video, image, and news packs specifically — explicit product direction that the previous bordered-box-with-thumbnail treatment felt too much like a generic/Google-style card grid, inconsistent with Nexa's calm-minimal identity.
