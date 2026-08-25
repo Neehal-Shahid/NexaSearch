@@ -163,31 +163,51 @@ export default function SearchPage() {
   const localResults = type === 'web' ? data?.local_results?.places || data?.local_results : null;
   const sportsResults = type === 'web' ? data?.sports_results : null;
 
-  // Intent Analysis Algorithm to dynamically order search packs
+  // Intent Analysis Algorithm to dynamically order AND gate search packs.
+  //
+  // SerpAPI returns inline_images/inline_videos carousels for a huge range
+  // of queries (verified live: a plain "cow" search returns a real
+  // inline_videos array even though the query has no video-related words at
+  // all) — far more often than real google.com actually promotes them to a
+  // prominent block above the organic results. Scoring used to only affect
+  // *order*, not *visibility*, so any available pack got shown regardless of
+  // whether the query signaled that intent. Images/videos are now gated on a
+  // genuine keyword match; top_stories stays ungated since a news carousel
+  // is a stronger, Google-native editorial signal rather than exploratory
+  // filler, and wasn't part of what was reported as over-shown.
   const getPackOrder = () => {
-    const q = query.toLowerCase();
-    
+    // Whole-word matching, not substring — .includes() would match "art"
+    // inside "artificial" (as in "artificial intelligence"), incorrectly
+    // signaling image intent. Now that scores gate visibility rather than
+    // just ordering, that false positive would actually show a pack for
+    // queries that clearly don't call for one.
+    const words = query.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
+
     const videoKeywords = ['video', 'videos', 'movie', 'watch', 'trailer', 'youtube', 'clip', 'stream', 'mp4'];
     const imageKeywords = ['pic', 'pics', 'picture', 'pictures', 'image', 'images', 'photo', 'photos', 'wallpaper', 'art', 'drawing'];
     const newsKeywords = ['news', 'latest', 'update', 'breaking', 'today', 'recent'];
-    
+
     // Assign +10 points if the query matches the specific intent
-    const videoScore = videoKeywords.some(kw => q.includes(kw)) ? 10 : 0;
-    const imageScore = imageKeywords.some(kw => q.includes(kw)) ? 10 : 0;
-    const newsScore = newsKeywords.some(kw => q.includes(kw)) ? 10 : 0;
-    
+    const videoScore = words.some(w => videoKeywords.includes(w)) ? 10 : 0;
+    const imageScore = words.some(w => imageKeywords.includes(w)) ? 10 : 0;
+    const newsScore = words.some(w => newsKeywords.includes(w)) ? 10 : 0;
+
     // Tie-breaker default priorities (Fallback: News > Images > Videos)
     const packs = [
       { id: 'top_stories', score: newsScore + 3 },
       { id: 'inline_images', score: imageScore + 2 },
       { id: 'inline_videos', score: videoScore + 1 }
     ];
-    
-    // Sort highest score first
-    return packs.sort((a, b) => b.score - a.score).map(p => p.id);
+
+    return {
+      order: packs.sort((a, b) => b.score - a.score).map(p => p.id),
+      hasImageIntent: imageScore > 0,
+      hasVideoIntent: videoScore > 0,
+    };
   };
-  
-  const packOrder = type === 'web' ? getPackOrder() : [];
+
+  const { order: packOrder, hasImageIntent, hasVideoIntent } =
+    type === 'web' ? getPackOrder() : { order: [], hasImageIntent: false, hasVideoIntent: false };
 
   // No query provided
   if (!query) {
@@ -342,7 +362,7 @@ export default function SearchPage() {
                             );
                           }
                           
-                          if (packId === 'inline_images' && data?.inline_images && data.inline_images.length > 0) {
+                          if (packId === 'inline_images' && hasImageIntent && data?.inline_images && data.inline_images.length > 0) {
                             return (
                               <div key={packId} className="mb-8">
                                 <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
@@ -364,7 +384,7 @@ export default function SearchPage() {
                             );
                           }
 
-                          if (packId === 'inline_videos' && data?.inline_videos && data.inline_videos.length > 0) {
+                          if (packId === 'inline_videos' && hasVideoIntent && data?.inline_videos && data.inline_videos.length > 0) {
                             return (
                               <div key={packId} className="mb-8">
                                 <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">

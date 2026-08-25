@@ -36,8 +36,18 @@ export default defineConfig(({ mode }) => {
             const engine = engineMap[type] || 'google';
             const start = (Math.max(1, parseInt(page, 10)) - 1) * 10;
 
-            const apiKeys = [env.SERPAPI_KEY, env.SERPAPI_KEY_2].filter(Boolean);
-            
+            // Mirrors api/search.js's keyPref handling — this was previously
+            // missing here, so the admin dashboard's "Primary SerpAPI Key"
+            // setting had no effect at all in local dev: SERPAPI_KEY was
+            // always tried first regardless, and SERPAPI_KEY_2 only got used
+            // once SERPAPI_KEY's quota was actually exhausted. That looks
+            // exactly like "both keys' credits going up" even after setting
+            // key 2 as primary, since key 1 kept absorbing real traffic.
+            let apiKeys = [env.SERPAPI_KEY, env.SERPAPI_KEY_2].filter(Boolean);
+            if (parsedUrl.searchParams.get('keyPref') === '2') {
+              apiKeys = [env.SERPAPI_KEY_2, env.SERPAPI_KEY].filter(Boolean);
+            }
+
             for (const apiKey of apiKeys) {
               const params = new URLSearchParams({
                 engine,
