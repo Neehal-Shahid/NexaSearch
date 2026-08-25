@@ -1,13 +1,6 @@
 import { useState, useEffect } from 'react';
 import CustomSelect from '../ui/CustomSelect';
-
-const LANGUAGES = [
-  "English", "Urdu", "Spanish", "French", "German", "Arabic", "Hindi", "Chinese", 
-  "Japanese", "Russian", "Portuguese", "Italian", "Korean", "Turkish", "Dutch", 
-  "Polish", "Indonesian", "Vietnamese", "Thai", "Persian", "Bengali", "Punjabi", 
-  "Marathi", "Telugu", "Tamil", "Gujarati", "Swahili", "Hausa", "Yoruba", "Zulu",
-  "Greek", "Swedish", "Norwegian", "Danish", "Finnish", "Czech", "Hungarian", "Romanian"
-].sort();
+import { TRANSLATION_LANGUAGES as LANGUAGES } from '../../constants';
 
 export default function TranslationBox({ data }) {
   // AnswerBox only guarantees data.source/data.target exist, not their
@@ -21,10 +14,25 @@ export default function TranslationBox({ data }) {
 
   // Update local state when data changes (from URL params)
   useEffect(() => {
-    setSourceText(data.source?.text || '');
-    setSourceLang(data.source?.language || 'English');
-    setTargetLang(data.target?.language || 'Urdu');
-    setTranslatedText(data.target?.text || '');
+    const source = data.source?.text || '';
+    const sLang = data.source?.language || 'English';
+    const tLang = data.target?.language || 'Urdu';
+    const target = data.target?.text || '';
+
+    setSourceText(source);
+    setSourceLang(sLang);
+    setTargetLang(tLang);
+    setTranslatedText(target);
+
+    // An empty target text is SearchPage's signal that this box was
+    // synthesized for a translation-intent query SerpAPI didn't return a
+    // real answer_box for (see detectTranslationIntent in SearchPage.jsx) —
+    // there's no real translation to seed with, so fetch one immediately
+    // instead of showing blank/placeholder text.
+    if (source && !target) {
+      performTranslation(source, sLang, tLang);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data]);
 
   const performTranslation = async (text, from, to) => {

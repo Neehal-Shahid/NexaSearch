@@ -48,3 +48,15 @@ export const FEATURE_FLAGS = {
 
 // Results per page
 export const RESULTS_PER_PAGE = 10;
+
+// Languages offered in the translation box's language pickers, and the set
+// SearchPage's translation-intent detector matches against (see
+// detectTranslationIntent in SearchPage.jsx) — centralized so both stay
+// in sync instead of duplicating this list.
+export const TRANSLATION_LANGUAGES = [
+  "English", "Urdu", "Spanish", "French", "German", "Arabic", "Hindi", "Chinese",
+  "Japanese", "Russian", "Portuguese", "Italian", "Korean", "Turkish", "Dutch",
+  "Polish", "Indonesian", "Vietnamese", "Thai", "Persian", "Bengali", "Punjabi",
+  "Marathi", "Telugu", "Tamil", "Gujarati", "Swahili", "Hausa", "Yoruba", "Zulu",
+  "Greek", "Swedish", "Norwegian", "Danish", "Finnish", "Czech", "Hungarian", "Romanian"
+].sort();

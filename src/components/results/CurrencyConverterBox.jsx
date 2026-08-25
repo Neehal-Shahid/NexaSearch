@@ -110,21 +110,31 @@ export default function CurrencyConverterBox({ data }) {
   };
 
   const handleSwap = () => {
-    const tempCurrency = fromCurrency;
-    setFromCurrency(toCurrency);
-    setToCurrency(tempCurrency);
-    
+    const newFromCurrency = toCurrency;
+    const newToCurrency = fromCurrency;
+    // The "from" box should carry over what the "to" box was just showing —
+    // not keep its own stale value under a new currency label. Previously
+    // fromAmount was left untouched here, so swapping "100 USD = 27850 PKR"
+    // produced "100 PKR = <bogus recompute>" instead of "27850 PKR = 100 USD".
+    const newFromAmount = toAmount;
+
+    setFromCurrency(newFromCurrency);
+    setToCurrency(newToCurrency);
+    setFromAmount(newFromAmount);
+
     // update rate locally for instant visual feedback
-    const newRate = 1 / rate;
+    const newRate = rate > 0 ? 1 / rate : 0;
     setRate(newRate);
-    
-    const parsed = parseFloat(fromAmount);
+
+    const parsed = parseFloat(newFromAmount);
     if (!isNaN(parsed)) {
       setToAmount((parsed * newRate).toFixed(2));
+    } else {
+      setToAmount('');
     }
-    
+
     // fetch true rate via Gemini
-    fetchNewRate(toCurrency, tempCurrency, fromAmount);
+    fetchNewRate(newFromCurrency, newToCurrency, newFromAmount);
   };
 
   return (

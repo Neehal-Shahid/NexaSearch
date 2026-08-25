@@ -23,7 +23,30 @@ import ErrorState from '../components/feedback/ErrorState';
 import { useSearch } from '../hooks/useSearch';
 import { useSearchHistory } from '../context/SearchHistoryContext';
 import { isAdultQuery, getRandomQuote } from '../utils/moderation';
-import { FEATURE_FLAGS } from '../constants';
+import { FEATURE_FLAGS, TRANSLATION_LANGUAGES } from '../constants';
+
+// Recognizes "translate <phrase> to/into/in <language>" and
+// "<phrase> meaning in <language>" — the two phrasings that reliably signal
+// translation intent without false-positiving on unrelated "X in Y" queries
+// (e.g. "best restaurants in london" doesn't match either pattern).
+function detectTranslationIntent(query) {
+  const trimmed = query.trim();
+  if (!trimmed) return null;
+
+  const match =
+    trimmed.match(/^translate\s+(.+?)\s+(?:to|into|in)\s+([a-zA-Z]+)$/i) ||
+    trimmed.match(/^(.+?)\s+meaning\s+in\s+([a-zA-Z]+)$/i);
+  if (!match) return null;
+
+  const [, rawPhrase, rawLanguage] = match;
+  const phrase = rawPhrase.trim();
+  const language = TRANSLATION_LANGUAGES.find(
+    (lang) => lang.toLowerCase() === rawLanguage.trim().toLowerCase()
+  );
+  if (!phrase || !language) return null;
+
+  return { phrase, language };
+}
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -104,17 +127,37 @@ export default function SearchPage() {
   const hasNext = data?.serpapi_pagination?.next != null;
   const knowledgeGraph = type === 'web' ? data?.knowledge_graph : null;
   const relatedSearches = type === 'web' ? data?.related_searches : null;
-  let answerBox = type === 'web' ? data?.answer_box : null;
 
-  // Portfolio Mock: If Google doesn't return a direct answer box for a translation query, 
-  // we can inject a mock one to showcase the translation UI component for the portfolio.
-  if (!answerBox && type === 'web' && query.toLowerCase().includes('translate') && query.toLowerCase().includes('urdu')) {
-    answerBox = {
-      type: "translation_result",
-      source: { language: "English", text: query.replace(/translate | to urdu| in urdu/gi, '').trim() || "Hello" },
-      target: { language: "Urdu", text: "ہیلو" }
+  // SerpAPI rarely/never returns a real translation answer_box for
+  // translation-intent queries ("X meaning in Y", "translate X to Y") even
+  // though Google's own UI shows one — verified empirically, not just
+  // assumed. When that happens, synthesize one so the feature still works.
+  //
+  // This MUST be memoized: it used to be a plain `let` recomputed fresh on
+  // every render (a brand-new object either way, real or synthesized). Since
+  // TranslationBox/CurrencyConverterBox both sync their internal state from
+  // this prop via a `useEffect(() => {...}, [data])`, a new reference on any
+  // unrelated SearchPage re-render (e.g. the aiOverviewData effect firing)
+  // silently reset whatever swap/language-change/amount-edit the user had
+  // just made back to the original seed — which is what "swapping/changing
+  // langs doesn't work" actually was.
+  const answerBox = useMemo(() => {
+    const realAnswerBox = type === 'web' ? data?.answer_box : null;
+    if (realAnswerBox) return realAnswerBox;
+    if (type !== 'web') return null;
+
+    const intent = detectTranslationIntent(query);
+    if (!intent) return null;
+
+    return {
+      type: 'translation_result',
+      source: { language: 'English', text: intent.phrase },
+      // Empty target text signals TranslationBox to fetch a real translation
+      // on mount instead of showing placeholder/wrong text.
+      target: { language: intent.language, text: '' },
     };
-  }
+  }, [data, type, query]);
+
   const peopleAlsoAsk = type === 'web' ? data?.related_questions : null;
   const searchInfo = data?.search_information;
   const localResults = type === 'web' ? data?.local_results?.places || data?.local_results : null;
