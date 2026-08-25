@@ -1,10 +1,14 @@
 import Logo from '../components/ui/Logo';
 import SearchBar from '../components/search/SearchBar';
+import TrendingSearches from '../components/search/TrendingSearches';
 import PageContainer from '../components/layout/PageContainer';
 import ExploreSection from '../components/home/ExploreSection';
 import SignatureVisual from '../components/ui/SignatureVisual';
+import { useTrendingSearches } from '../hooks/useTrendingSearches';
 
 export default function HomePage() {
+  const { trends } = useTrendingSearches();
+
   return (
     <main className="relative flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-8rem)] overflow-hidden">
       <SignatureVisual />
@@ -25,6 +29,7 @@ export default function HomePage() {
         {/* Search bar */}
         <div className="w-full max-w-2xl">
           <SearchBar variant="hero" autoFocus />
+          <TrendingSearches searches={trends.slice(0, 6).map((t) => t.query)} />
         </div>
 
         {/* Explore section */}

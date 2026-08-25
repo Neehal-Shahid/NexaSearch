@@ -11,6 +11,8 @@ Nexa/
 │   │                              #   payload size capped
 │   ├── admin.js                  # GET → aggregated SerpAPI + Gemini account/usage stats — requires
 │   │                              #   x-admin-key header matching ADMIN_SECRET env var, rate-limited
+│   ├── trending.js               # GET proxy → SerpAPI google_trends_trending_now, moderation-filtered,
+│   │                              #   rate-limited, 15min cache; feeds Command Palette + homepage (added 2026-08-25)
 │   └── _lib/
 │       └── rateLimit.js          # Shared in-memory per-IP rate limiter (best-effort, no DB — see
 │                                  #   DECISIONS.md); underscore-prefixed so Vercel excludes it from routing
@@ -34,7 +36,9 @@ Nexa/
 │   ├── hooks/
 │   │   ├── useSearch.js          # Fetches search results for (query, type, page); AbortController-based
 │   │   │                          #   cancellation on param change/unmount; exposes { data, loading, error, retry }
-│   │   └── useDebounce.js        # Generic value-debounce hook
+│   │   ├── useDebounce.js        # Generic value-debounce hook
+│   │   └── useTrendingSearches.js # Fetches /api/trending with a module-level shared cache + graceful
+│   │                              #   fallback to the static TRENDING_SEARCHES list; added 2026-08-25
 │   │
 │   ├── constants/
 │   │   └── index.js              # SEARCH_TYPES, SEARCH_TABS, TRENDING_SEARCHES, storage keys,
@@ -68,8 +72,13 @@ Nexa/
 │       ├── search/
 │       │   ├── SearchBar.jsx     # Main search input (hero/compact variants), history autocomplete, "/" shortcut
 │       │   ├── SearchTabs.jsx    # Result-type tab bar; hides "AI" tab if admin_disable_ai flag is set
-│       │   ├── CommandPalette.jsx# Cmd/Ctrl+K launcher: recent + trending + nav shortcuts
-│       │   └── TrendingSearches.jsx # Static chip list of trending queries
+│       │   ├── CommandPalette.jsx# Cmd/Ctrl+K palette — flat keyboard-navigable list (arrow keys + Enter,
+│       │   │                     #   live filter-as-you-type) over recent + live trending + all nav
+│       │   │                     #   destinations, plus an always-available free-text search fallback
+│       │   │                     #   (rewritten 2026-08-25 — used to have no filtering/keyboard nav at all)
+│       │   └── TrendingSearches.jsx # Chip list of trending queries; wired to live data via
+│       │                         #   useTrendingSearches on HomePage (2026-08-25 — was built but never
+│       │                         #   actually rendered anywhere before)
 │       │
 │       ├── results/              # Largest folder — renders SerpAPI-shaped data
 │       │   ├── NexaOverview.jsx      # Inline AI-overview card shown above web results (own mini markdown parser)

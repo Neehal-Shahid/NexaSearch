@@ -81,16 +81,35 @@ export default function SearchPage() {
     };
   }, [query]);
 
-  // Handle AI Overview page_token resolution
+  // AI Overview state, split into two effects deliberately — a single
+  // effect keyed on [data, type] used to both set AND clear it, which had
+  // two bugs:
+  //
+  // 1. useSearch's `data` doesn't clear when query/type change — it keeps
+  //    the PREVIOUS query's data until the new fetch resolves. Since [type]
+  //    changes immediately on navigation but [data] lags behind, there was a
+  //    window where `type === 'web' && data?.ai_overview` was evaluated
+  //    against the OLD query's data, attaching the wrong overview to the
+  //    new query.
+  // 2. When ai_overview exists but only has a page_token (SerpAPI's
+  //    deferred/paginated shape, common for harder factual queries — see
+  //    the unimplemented pagination TODO below), the old code did nothing:
+  //    didn't set, didn't clear. Whatever was already showing (including a
+  //    wrongly-attached value from bug #1) just froze there permanently,
+  //    since nothing else would ever correct it.
+  //
+  // Resetting eagerly on [query, type, page] closes the race window from
+  // #1 (data hasn't caught up yet, so there's nothing valid to show until
+  // it does). Populating only from a genuinely current, text_blocks-bearing
+  // `data` in a separate effect closes #2 — a page_token-only overview has
+  // no renderable content yet, so it's treated the same as "no overview".
   useEffect(() => {
-    if (type === 'web' && data?.ai_overview) {
-      if (data.ai_overview.text_blocks) {
-        setAiOverviewData(data.ai_overview);
-      } else if (data.ai_overview.page_token) {
-        // Handle token logic later
-      }
-    } else {
-      setAiOverviewData(null);
+    setAiOverviewData(null);
+  }, [query, type, page]);
+
+  useEffect(() => {
+    if (type === 'web' && data?.ai_overview?.text_blocks) {
+      setAiOverviewData(data.ai_overview);
     }
   }, [data, type]);
 
