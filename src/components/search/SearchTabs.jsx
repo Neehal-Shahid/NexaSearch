@@ -10,6 +10,7 @@ export default function SearchTabs() {
     newParams.set('type', type);
     newParams.set('page', '1'); // Reset to page 1 when switching tabs
     setSearchParams(newParams);
+    window.scrollTo({ top: 0 });
   };
 
   return (
