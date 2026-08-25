@@ -146,8 +146,7 @@ export default function SearchBar({ variant = 'hero', autoFocus = false }) {
               type="button"
               onClick={() => {
                 setQuery('');
-                setIsFocused(false);
-                navigate('/');
+                inputRef.current?.focus();
               }}
               className={`text-text-muted hover:text-text-secondary transition-colors rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-text-muted ${
                 isHero ? 'p-2.5 mr-1' : 'p-2 mr-0.5'
