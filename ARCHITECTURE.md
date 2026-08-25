@@ -84,6 +84,10 @@ Three plain `localStorage` keys act as feature toggles (`FEATURE_FLAGS` in `src/
 
 These are **per-browser** (each visitor has their own copy), not global server config, despite the "platform controls" naming. See DECISIONS.md.
 
+## Pagination — not every SerpAPI engine reports `hasNext` (fixed 2026-08-26)
+
+`Pagination.jsx` itself is generic and renders for every result type; what varies is whether `SearchPage.jsx`'s `hasNext` correctly tells it there's more. `data?.serpapi_pagination?.next` only exists for `web`/`ai`/`images` engines — verified live that `google_videos` and `google_shopping` never include it, even though both engines genuinely do return different results for a later `page`/`start` (confirmed directly: fetched two pages of each, got distinct items both times, not repeats or empty). Since there's no explicit "more available" signal for those two, `hasNext` falls back to inferring it from page fullness: `results.length >= 10` for videos (matches the `num=10` requested), `results.length >= 20` for shopping (Google Shopping ignores `num` and always returns ~40 regardless, so the threshold reflects what a full response actually looks like, not the requested size). This is an inference, not a guarantee — the very last page of either engine could still show an enabled (but ultimately empty) Next button; there's no cheaper way to know without SerpAPI providing the signal directly.
+
 ## Defensive rendering pattern (why it exists)
 
 SerpAPI's JSON shapes are inconsistent across fields and engines (e.g. `thumbnail` can be a string or `{static: ...}`; `source` can be a string or `{name: ...}`; a `description` can be a string or `{text: ...}`). Recent commit history (`872ab2f "Fix critical white screen crash in NexaOverview..."`) shows this caused real production crashes. The established convention across `src/components/results/` is:

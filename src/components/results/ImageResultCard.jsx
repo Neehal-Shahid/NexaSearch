@@ -32,8 +32,14 @@ export default function ImageResultCard({ result, onClick, variant = 'default' }
         />
       </button>
 
-      {/* Overlay with info */}
-      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/70 via-black/25 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+      {/* A uniform darkening across the whole tile on hover — not just the
+          text gradient below — so the save button (top-right) also reads
+          clearly against bright/white photos, not just the caption text. */}
+      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/15 transition-colors duration-200 pointer-events-none" />
+
+      {/* Overlay with info — deepened so the caption text stays legible even
+          over a light-colored image, not just mid-tone ones. */}
+      <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/45 to-transparent p-3 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
         <p className="text-white text-xs font-medium truncate">
           {result.title || result.source}
         </p>

@@ -158,7 +158,19 @@ export default function SearchPage() {
   };
 
   const results = getResults();
-  const hasNext = data?.serpapi_pagination?.next != null;
+  // SerpAPI only returns serpapi_pagination.next for some engines (verified
+  // live: web and images have it, video_results/shopping_results don't —
+  // even though both genuinely do return different results for a later
+  // page when asked, SerpAPI just doesn't tell us there's more). Without
+  // this fallback, Videos/Shopping never showed a Next button at all. Since
+  // there's no explicit "more available" signal for these two, infer it the
+  // standard way: a page that came back full is probably not the last one.
+  // Google Shopping ignores our num=10 request and always returns ~40 per
+  // page regardless, hence the different threshold.
+  const hasNext =
+    data?.serpapi_pagination?.next != null ||
+    (type === 'videos' && results?.length >= 10) ||
+    (type === 'shopping' && results?.length >= 20);
   const knowledgeGraph = type === 'web' ? data?.knowledge_graph : null;
   const relatedSearches = type === 'web' ? data?.related_searches : null;
 
