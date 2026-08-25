@@ -15,7 +15,7 @@ export default function SearchTabs() {
   return (
     <div className="border-b border-border" role="tablist" aria-label="Search result types">
       <div className="flex gap-1 overflow-x-auto scrollbar-none -mb-px">
-        {SEARCH_TABS.map(({ key, label }) => {
+        {SEARCH_TABS.filter(tab => !(tab.key === 'ai' && localStorage.getItem('admin_disable_ai') === 'true')).map(({ key, label }) => {
           const isActive = currentType === key;
           return (
             <button

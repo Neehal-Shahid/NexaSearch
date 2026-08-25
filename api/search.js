@@ -46,6 +46,7 @@ export default async function handler(req, res) {
       engine,
       q: q.trim(),
       api_key: apiKey,
+      safe: 'active',
     });
 
     // Handle engine-specific pagination parameters

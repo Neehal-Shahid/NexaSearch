@@ -22,6 +22,7 @@ import EmptyState from '../components/feedback/EmptyState';
 import ErrorState from '../components/feedback/ErrorState';
 import { useSearch } from '../hooks/useSearch';
 import { useSearchHistory } from '../context/SearchHistoryContext';
+import { isAdultQuery, getRandomQuote } from '../utils/moderation';
 
 export default function SearchPage() {
   const [searchParams] = useSearchParams();
@@ -29,17 +30,19 @@ export default function SearchPage() {
   const type = searchParams.get('type') || 'web';
   const page = parseInt(searchParams.get('page') || '1', 10);
 
-  const { data, loading, error, retry } = useSearch(query, type, page);
+  const isAdult = isAdultQuery(query);
+  const { data, loading, error, retry } = useSearch(isAdult ? '' : query, type, page);
   const { addToHistory } = useSearchHistory();
   const [aiOverviewData, setAiOverviewData] = useState(null);
   const [isLoadingAi, setIsLoadingAi] = useState(false);
+  const [quoteForAdult] = useState(() => isAdult ? getRandomQuote() : null);
 
   // Record search in history when results arrive
   useEffect(() => {
-    if (data && query) {
+    if (data && query && !isAdult) {
       addToHistory(query, type);
     }
-  }, [data, query, type, addToHistory]);
+  }, [data, query, type, addToHistory, isAdult]);
 
   // Update document title
   useEffect(() => {
@@ -57,10 +60,7 @@ export default function SearchPage() {
       if (data.ai_overview.text_blocks) {
         setAiOverviewData(data.ai_overview);
       } else if (data.ai_overview.page_token) {
-        // Only automatically fetch if we haven't already for this token
-        // In a real production scenario with tight quotas, we might want to attach this to a user click instead.
-        // For now, we will wait for user interaction to fetch it, to optimize quota.
-        // We'll handle this in the NexaOverview component if needed, or just skip it if there's no text blocks.
+        // Handle token logic later
       }
     } else {
       setAiOverviewData(null);
@@ -157,6 +157,39 @@ export default function SearchPage() {
     );
   }
 
+  if (isAdult) {
+    return (
+      <main className="flex-1 bg-background min-h-[80vh] flex flex-col relative overflow-hidden">
+        {/* Subtle animated background gradient for beautiful vibe */}
+        <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-background to-emerald-500/5 animate-gradient-x opacity-60"></div>
+        
+        <PageContainer className="py-8 relative z-10">
+          <SearchBar variant="compact" />
+          
+          <div className="flex flex-col items-center justify-center mt-24 max-w-2xl mx-auto text-center px-4">
+            <div className="w-16 h-16 rounded-full bg-accent/10 flex items-center justify-center mb-8 shadow-sm">
+              <svg className="w-8 h-8 text-accent" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z" />
+              </svg>
+            </div>
+            
+            <h2 className="text-3xl sm:text-4xl font-bold text-text-primary mb-6 leading-tight font-serif italic">
+              "{quoteForAdult?.text}"
+            </h2>
+            
+            <p className="text-sm font-semibold text-text-secondary uppercase tracking-widest bg-surface-secondary px-4 py-2 rounded-full border border-border-subtle inline-block">
+              — {quoteForAdult?.source} —
+            </p>
+            
+            <p className="mt-12 text-sm text-text-muted">
+              Nexa is committed to providing a clean, safe, and positive search environment for everyone.
+            </p>
+          </div>
+        </PageContainer>
+      </main>
+    );
+  }
+
   return (
     <main className="flex-1 bg-background">
       <PageContainer className="py-6">
@@ -198,7 +231,14 @@ export default function SearchPage() {
                 />
               ) : type === 'ai' ? (
                 <div className="w-full">
-                  <AiMode data={data} query={query} />
+                  {localStorage.getItem('admin_disable_ai') === 'true' ? (
+                    <EmptyState
+                      title="AI Features Disabled"
+                      description="The administrator has temporarily disabled all AI features on Nexa."
+                    />
+                  ) : (
+                    <AiMode data={data} query={query} />
+                  )}
                 </div>
               ) : (
                     <div className={type === 'web' && knowledgeGraph ? 'flex gap-10' : ''}>
@@ -209,7 +249,7 @@ export default function SearchPage() {
                         {type === 'web' && (
                           <>
                             {answerBox && <AnswerBox data={answerBox} />}
-                            {aiOverviewData && <NexaOverview data={aiOverviewData} searchContext={data?.organic_results?.slice(0, 5).map(r => `Title: ${r.title}\nSnippet: ${r.snippet}`).join('\n\n')} query={query} />}
+                            {localStorage.getItem('admin_disable_ai') !== 'true' && aiOverviewData && <NexaOverview data={aiOverviewData} searchContext={data?.organic_results?.slice(0, 5).map(r => `Title: ${r.title}\nSnippet: ${r.snippet}`).join('\n\n')} query={query} />}
                           </>
                         )}
 
@@ -222,7 +262,7 @@ export default function SearchPage() {
                         )}
 
                         {/* Dynamic Intent-Based Inline Packs */}
-                        {type === 'web' && packOrder.map(packId => {
+                        {type === 'web' && localStorage.getItem('admin_disable_media_packs') !== 'true' && packOrder.map(packId => {
                           if (packId === 'top_stories' && data?.top_stories && data.top_stories.length > 0) {
                             return (
                               <div key={packId} className="mb-8">
