@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import SaveButton from '../ui/SaveButton';
+import { extractDomain } from '../../utils/formatters';
 
 export default function ImagePreviewModal({ results, initialIndex, onClose }) {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
@@ -104,7 +105,7 @@ export default function ImagePreviewModal({ results, initialIndex, onClose }) {
               {result.link && (
                 <>
                   <span>&bull;</span>
-                  <span className="text-white/40 text-xs">{new URL(result.link).hostname}</span>
+                  <span className="text-white/40 text-xs">{extractDomain(result.link)}</span>
                 </>
               )}
             </p>

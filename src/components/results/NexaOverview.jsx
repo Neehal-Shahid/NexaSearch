@@ -55,6 +55,12 @@ export default function NexaOverview({ data, searchContext = '', query }) {
 
         <div className="space-y-5">
           {displayBlocks.map((block, index) => {
+            // SerpAPI's text_blocks array can contain null/non-object entries
+            // (e.g. sparse arrays, reference blocks with an unexpected shape).
+            // These only surface once "Read full overview" reveals blocks past
+            // index 1, so this guard must live here, not just at the array level.
+            if (!block || typeof block !== 'object') return null;
+
             // Basic markdown formatter
             const formatText = (text) => {
               if (text == null) return '';
@@ -125,7 +131,7 @@ export default function NexaOverview({ data, searchContext = '', query }) {
           {/* Global Media for AI Overview */}
           {(data.videos || data.images) && (
             <div className="mt-6 pt-4 border-t border-border-subtle flex flex-wrap gap-4">
-              {Array.isArray(data.videos) && data.videos.slice(0, 2).map((vid, i) => (
+              {Array.isArray(data.videos) && data.videos.filter(Boolean).slice(0, 2).map((vid, i) => (
                 <a key={`vid-${i}`} href={vid.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 pr-5 rounded-xl border border-border-subtle hover:bg-surface-secondary transition-colors group max-w-sm">
                   <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-red-500/20 transition-colors">
                     <svg className="w-6 h-6 text-red-500 pl-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
@@ -138,7 +144,7 @@ export default function NexaOverview({ data, searchContext = '', query }) {
                   </div>
                 </a>
               ))}
-              {Array.isArray(data.images) && data.images.slice(0, 3).map((img, i) => (
+              {Array.isArray(data.images) && data.images.filter(Boolean).slice(0, 3).map((img, i) => (
                 <a key={`img-${i}`} href={img.link} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 rounded-xl overflow-hidden border border-border-subtle hover:opacity-80 transition-opacity">
                   <img src={img.thumbnail || img.link} alt="AI Reference" className="w-full h-full object-cover" />
                 </a>
