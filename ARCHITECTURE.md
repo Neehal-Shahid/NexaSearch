@@ -54,6 +54,8 @@ Two providers wrap the whole tree in `App.jsx`: `SearchHistoryProvider` → `Sav
 
 Both `CurrencyConverterBox.jsx` and `TranslationBox.jsx` also independently call `/api/chat` with the same two-model fallback pattern — this logic exists in three separate places (`AiMode`, `CurrencyConverterBox`, `TranslationBox`), not a shared hook.
 
+**`utils/markdown.js` placeholder mechanism (fixed 2026-08-25)**: code blocks and inline code are extracted to placeholder tokens before the bold/italic/link/strikethrough regex passes run, then restored with the real HTML at the very end — this is what protects code content from being mangled by markdown syntax that happens to appear inside it. The placeholder format matters: it must use a character none of the other regex passes touch. It used to be `__CODE_BLOCK_N__`, which broke the moment underscore-italic support (`_text_` → `<em>`) was added, since `/_([^_]+)_/g` matched pieces of the double-underscore placeholder itself and corrupted it before the final restoration step could find it. Placeholders now use `@@NEXACODEBLOCK N@@` / `@@NEXAINLINECODE N@@` — if any future markdown feature is added to this parser, check it against both placeholder formats before shipping it.
+
 ## API hardening (added 2026-08-25)
 
 All three `/api/*` functions got a defense-in-depth pass, staying within the "no backend, no database, Vercel-only" constraint:
@@ -85,6 +87,8 @@ SerpAPI's JSON shapes are inconsistent across fields and engines (e.g. `thumbnai
 - Widget dispatchers (`AnswerBox.jsx`) gate on data shape *before* handing off to specialized components, so e.g. `CurrencyConverterBox`/`TranslationBox` can (mostly) assume their expected sub-fields exist.
 
 **Formerly a known exception, now fixed (2026-08-25)**: `ImagePreviewModal.jsx` used to call `new URL(result.link).hostname` with no try/catch. It now uses `extractDomain()` from `utils/formatters.js`, matching the rest of the codebase's defensive convention. Similarly, `NexaOverview.jsx`'s block-rendering `.map()` used to assume every `text_blocks` entry was a non-null object — this only broke when the "Read full overview" toggle revealed blocks past index 1, since those are never rendered (and never crash-tested) until expanded. It now guards with `if (!block || typeof block !== 'object') return null` before touching any field.
+
+**Knowledge panel specifics (verified against live SerpAPI data, 2026-08-25)**: `KnowledgePanel.jsx` renders in **two places** in `SearchPage.jsx` — a `lg:hidden` inline placement near the top of the main column (mobile/tablet) and a `hidden lg:block` sidebar (desktop) — both reading the same `knowledgeGraph` data; there used to be only the desktop one, so the panel was invisible below the `lg` breakpoint entirely. Its "Key facts" table doesn't read a `data.facts` object (that field doesn't actually exist in real SerpAPI responses); it derives facts from the entity's dynamic top-level fields (`born`/`died`/`spouse`/... for a person, different fields for other entity types) via `extractFacts()`, filtering out a known set of meta fields and any `..._link`/`..._links` variant.
 
 ### App-wide safety net: ErrorBoundary
 

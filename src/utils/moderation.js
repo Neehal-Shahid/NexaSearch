@@ -1,11 +1,27 @@
-export const ADULT_KEYWORDS = [
-  'porn', 'pornhub', 'sex', 'sexy', 'xnxx', 'xvideos', 'nude', 'nudes',
-  'naked', 'boobs', 'tits', 'pussy', 'dick', 'cock', 'blowjob', 'handjob',
-  'anal', 'fuck', 'fucking', 'milf', 'hentai', 'bdsm', 'fetish', 'escort',
-  'escorts', 'hooker', 'prostitute', 'slut', 'whore', 'masturbate', 'dildo',
-  'vibrator', 'sex toy', 'sex toys', 'onlyfans', 'nsfw', 'xhamster', 'redtube',
-  'rule34', 'rule 34', 'erotica', 'incest', 'cuckold', 'adult video', 'adult videos',
-  '18+ video', '18+ videos', 'kissing', 'breast', 'breasts', 'nipple', 'nipples'
+// Unambiguous adult terms/sites — always blocked, regardless of medical
+// context. Nothing here has a legitimate medical/educational reading, so
+// unlike AMBIGUOUS_KEYWORDS below, these are never eligible for the
+// MEDICAL_ALLOWLIST bypass (that used to be exploitable, e.g. "pornhub
+// treatment" or "xnxx doctor" previously passed as safe — see below).
+export const EXPLICIT_KEYWORDS = [
+  'porn', 'porno', 'pornographic', 'pornhub', 'xxx', 'xnxx', 'xvideos',
+  'xhamster', 'redtube', 'youporn', 'spankbang', 'chaturbate', 'stripchat',
+  'bongacams', 'livejasmin', 'brazzers', 'motherless', 'thothub', 'onlyfans',
+  'nsfw', 'hentai', 'rule34', 'rule 34', 'erotica', 'fetish', 'bdsm',
+  'incest', 'cuckold', 'gangbang', 'creampie', 'deepthroat', 'cumshot',
+  'blowjob', 'handjob', 'anal sex', 'anal', 'fuck', 'fucking', 'pussy',
+  'dick', 'cock', 'milf', 'slut', 'whore', 'masturbate', 'masturbation',
+  'dildo', 'vibrator', 'sex toy', 'sex toys', 'escort', 'escorts', 'hooker',
+  'hookers', 'prostitute', 'prostitutes', 'adult video', 'adult videos',
+  '18+ video', '18+ videos', 'camgirl', 'cam girl', 'leaked nudes', 'nude leaks',
+];
+
+// Genuinely ambiguous terms with real anatomical/medical/educational uses
+// ("breast cancer", "kissing disease", "sex education") — these are the
+// only ones eligible for the MEDICAL_ALLOWLIST bypass.
+export const AMBIGUOUS_KEYWORDS = [
+  'sex', 'sexy', 'nude', 'nudes', 'naked', 'boobs', 'tits', 'breast',
+  'breasts', 'nipple', 'nipples', 'kissing',
 ];
 
 export const MEDICAL_ALLOWLIST = [
@@ -13,36 +29,32 @@ export const MEDICAL_ALLOWLIST = [
   'medical', 'doctor', 'treatment', 'symptom', 'symptoms', 'virus', 'infection', 'std'
 ];
 
+function matchesKeywordList(words, normalizedString, keywordList) {
+  // Exact word matches prevent flagging innocent words containing adult
+  // substrings (e.g., "Middlesex", "Essex", "peacock").
+  if (words.some(word => keywordList.includes(word))) return true;
+
+  // Phrase matches — handles multi-word keywords like "sex toys" or "18+ videos".
+  return keywordList.some(keyword => keyword.includes(' ') && normalizedString.includes(keyword));
+}
+
 export function isAdultQuery(query) {
   if (!query) return false;
-  
-  // Create a normalized string for phrase checking (preserves numbers, allows 18+)
+
+  // Normalize for both word and phrase checking (preserves numbers, allows 18+)
   const normalizedString = query.toLowerCase().replace(/[^a-z0-9\+\s]/g, '');
   const words = normalizedString.split(/\s+/);
-  
-  // 1. Check for medical/educational bypass first
-  // If the query contains a medical term, we let it pass the basic keyword block
-  // (e.g. "sex diseases", "breast cancer")
-  const isMedicalContext = words.some(word => MEDICAL_ALLOWLIST.includes(word));
-  if (isMedicalContext) {
-    return false;
+
+  // 1. Explicit terms block immediately — no medical bypass applies here.
+  if (matchesKeywordList(words, normalizedString, EXPLICIT_KEYWORDS)) {
+    return true;
   }
 
-  // 2. Check exact word matches
-  // Using exact word matches prevents flagging innocent words containing adult substrings 
-  // (e.g., "Middlesex", "Essex", "peacock")
-  for (const word of words) {
-    if (ADULT_KEYWORDS.includes(word)) {
-      return true;
-    }
-  }
-
-  // 3. Check phrase matches
-  // Handles multi-word keywords like "sex toys" or "18+ videos"
-  for (const keyword of ADULT_KEYWORDS) {
-    if (keyword.includes(' ') && normalizedString.includes(keyword)) {
-      return true;
-    }
+  // 2. Ambiguous terms only block if there's no medical/educational context
+  // alongside them (e.g. "breast cancer" is allowed, bare "breast" is not).
+  if (matchesKeywordList(words, normalizedString, AMBIGUOUS_KEYWORDS)) {
+    const isMedicalContext = words.some(word => MEDICAL_ALLOWLIST.includes(word));
+    return !isMedicalContext;
   }
 
   return false;

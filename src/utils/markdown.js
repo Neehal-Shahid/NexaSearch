@@ -1,11 +1,19 @@
 export function parseMarkdown(text) {
   if (!text) return '';
-  
+
   const codeBlocks = [];
-  
+  const inlineCodes = [];
+
+  // Placeholders use '@@' — deliberately not '_' or '*', since those are
+  // markdown syntax characters that get regex-replaced further down (e.g.
+  // the italic-underscore rule below matches "_CODE_" inside a token like
+  // "__CODE_BLOCK_0__", corrupting it before the final placeholder swap
+  // could find it — that previously broke every code block/inline code
+  // span containing an underscore).
+
   // 1. Extract code blocks and replace with placeholders
   let processedText = text.replace(/```(\w*)\n([\s\S]*?)```/g, (match, lang, code) => {
-    const placeholder = `__CODE_BLOCK_${codeBlocks.length}__`;
+    const placeholder = `@@NEXACODEBLOCK${codeBlocks.length}@@`;
     const encodedCode = encodeURIComponent(code);
     codeBlocks.push(`
       <div class="my-5 bg-background border border-border-subtle rounded-xl overflow-hidden shadow-sm relative group">
@@ -22,9 +30,14 @@ export function parseMarkdown(text) {
     return placeholder;
   });
 
-  // 2. Parse inline code: `code`
+  // 2. Extract inline code spans to placeholders too — for the same reason
+  // as code blocks. Restoring the actual <code> HTML only at the very end
+  // (instead of inserting it here) protects code content like "num_1" or
+  // "my*ptr" from being mangled by the bold/italic/strikethrough passes below.
   processedText = processedText.replace(/`([^`]+)`/g, (match, p1) => {
-    return `<code class="bg-surface-secondary border border-border-subtle px-1.5 py-0.5 rounded-md font-mono text-[13.5px] text-text-primary">${p1.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>`;
+    const placeholder = `@@NEXAINLINECODE${inlineCodes.length}@@`;
+    inlineCodes.push(`<code class="bg-surface-secondary border border-border-subtle px-1.5 py-0.5 rounded-md font-mono text-[13.5px] text-text-primary">${p1.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</code>`);
+    return placeholder;
   });
 
   // 3. Parse bold: **text** -> <strong>text</strong>
@@ -49,7 +62,7 @@ export function parseMarkdown(text) {
     const line = lines[i].trim();
 
     // Code blocks
-    if (line.match(/^__CODE_BLOCK_\d+__$/)) {
+    if (line.match(/^@@NEXACODEBLOCK\d+@@$/)) {
       if (inList) {
         resultHtml += '</ul>';
         inList = false;
@@ -121,9 +134,14 @@ export function parseMarkdown(text) {
     resultHtml = resultHtml.slice(0, -6);
   }
 
-  // 5. Replace placeholders with actual code blocks
+  // Replace placeholders with actual HTML — inline code first (harmless
+  // either order, since the two placeholder formats can't overlap), then
+  // code blocks.
+  for (let i = 0; i < inlineCodes.length; i++) {
+    resultHtml = resultHtml.replace(`@@NEXAINLINECODE${i}@@`, inlineCodes[i]);
+  }
   for (let i = 0; i < codeBlocks.length; i++) {
-    resultHtml = resultHtml.replace(`__CODE_BLOCK_${i}__`, codeBlocks[i]);
+    resultHtml = resultHtml.replace(`@@NEXACODEBLOCK${i}@@`, codeBlocks[i]);
   }
 
   return resultHtml;

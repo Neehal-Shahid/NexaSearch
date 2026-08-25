@@ -52,6 +52,8 @@ Architectural choices and the reasoning/trade-offs behind them, inferred from th
 
 **Trade-off still accepted**: it's still keyword matching, not real moderation (no ML classifier, no third-party moderation API) — a determined user can still phrase around it. What changed is that the check can no longer be skipped just by not going through the browser UI; the browser is no longer a trusted enforcement point on its own.
 
+**Tightened further 2026-08-25**: the keyword list was split into `EXPLICIT_KEYWORDS` (unambiguous adult terms/sites — porn, pornhub, xnxx, onlyfans, etc.) and `AMBIGUOUS_KEYWORDS` (dual-use anatomical terms — breast, nude, naked, kissing). Only the ambiguous tier is eligible for the `MEDICAL_ALLOWLIST` bypass now. Previously the bypass applied to the *whole* keyword list and ran before the keyword check, so any query containing one medical word (e.g. "doctor", "treatment") cleared the entire query regardless of what else it contained — `"pornhub doctor"` passed as safe. That was a real, demonstrable loophole, not just a theoretical one, and closing it was the point of this change; legitimate medical/educational queries (`"breast cancer"`, `"kissing disease"`, `"sex education"`) still pass because those terms stayed in the bypass-eligible ambiguous tier.
+
 ## Two independent markdown renderers instead of one shared one
 
 **Observed**: `src/utils/markdown.js` (a fuller regex-based parser: headings, lists, blockquotes, hr, code blocks with copy button) is used by `AiMode.jsx`. `NexaOverview.jsx` hand-rolls its *own*, separate, more limited inline formatter (bold/italic/inline-code only) rather than importing `utils/markdown.js`.

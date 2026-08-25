@@ -1,6 +1,18 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
+// SerpAPI's ai_overview text/list fields are sometimes objects (e.g.
+// { text, snippet, title }) instead of plain strings. Stringifying one
+// directly (`${value}`) silently produces the literal text "[object
+// Object]" instead of throwing — so every place that reads these fields
+// needs this normalization, not just the ones that happen to crash.
+function toPlainText(value) {
+  if (value == null) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return value.text || value.snippet || value.title || '';
+  return String(value);
+}
+
 export default function NexaOverview({ data, searchContext = '', query }) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -24,9 +36,13 @@ export default function NexaOverview({ data, searchContext = '', query }) {
 
     const userMessage = inputValue.trim();
     const initialText = blocks.map(b => {
-      let text = b.title ? `**${b.title}**\n` : '';
-      if (b.snippet) text += `${b.snippet}\n`;
-      if (b.list && Array.isArray(b.list)) text += b.list.map(i => `- ${i}`).join('\n');
+      const title = toPlainText(b.title);
+      const snippet = toPlainText(b.snippet);
+      let text = title ? `**${title}**\n` : '';
+      if (snippet) text += `${snippet}\n`;
+      if (b.list && Array.isArray(b.list)) {
+        text += b.list.map(toPlainText).filter(Boolean).map(item => `- ${item}`).join('\n');
+      }
       return text.trim();
     }).filter(Boolean).join('\n\n');
     
@@ -63,18 +79,9 @@ export default function NexaOverview({ data, searchContext = '', query }) {
 
             // Basic markdown formatter
             const formatText = (text) => {
-              if (text == null) return '';
-              let str = '';
-              if (typeof text === 'string') {
-                str = text;
-              } else if (typeof text === 'object') {
-                str = text.text || text.snippet || text.title || '';
-              } else {
-                str = String(text);
-              }
-              
-              if (!str || str === '[object Object]') return '';
-              
+              const str = toPlainText(text);
+              if (!str) return '';
+
               return str
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')

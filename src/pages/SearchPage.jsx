@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import PageContainer from '../components/layout/PageContainer';
 import SearchBar from '../components/search/SearchBar';
@@ -35,7 +35,11 @@ export default function SearchPage() {
   const { data, loading, error, retry } = useSearch(isAdult ? '' : query, type, page);
   const { addToHistory } = useSearchHistory();
   const [aiOverviewData, setAiOverviewData] = useState(null);
-  const [quoteForAdult] = useState(() => isAdult ? getRandomQuote() : null);
+  // Recompute per query, not just once at mount — SearchPage stays mounted
+  // across searches (react-router doesn't remount on a param-only URL
+  // change), so a mount-time-only useState() left this stale/blank for
+  // every adult query after the first one on the page.
+  const quoteForAdult = useMemo(() => (isAdult ? getRandomQuote() : null), [isAdult, query]);
 
   // Record search in history when results arrive
   useEffect(() => {
@@ -251,6 +255,16 @@ export default function SearchPage() {
                             {answerBox && <AnswerBox data={answerBox} />}
                             {localStorage.getItem(FEATURE_FLAGS.DISABLE_AI) !== 'true' && aiOverviewData && <NexaOverview data={aiOverviewData} searchContext={data?.organic_results?.slice(0, 5).map(r => `Title: ${r.title}\nSnippet: ${r.snippet}`).join('\n\n')} query={query} />}
                           </>
+                        )}
+
+                        {/* Knowledge panel (mobile/tablet) — the sidebar placement below is
+                            desktop-only (hidden below the lg breakpoint), so without this the
+                            panel never rendered anywhere on phones/tablets even though the data
+                            was already fetched. */}
+                        {type === 'web' && knowledgeGraph && (
+                          <div className="lg:hidden mb-8">
+                            <KnowledgePanel data={knowledgeGraph} />
+                          </div>
                         )}
 
                         {type === 'web' && (localResults || data?.local_map) && (
