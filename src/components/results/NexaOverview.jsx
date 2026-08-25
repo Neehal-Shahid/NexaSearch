@@ -54,37 +54,86 @@ export default function NexaOverview({ data, searchContext = '', query }) {
         </div>
 
         <div className="space-y-5">
-          {displayBlocks.map((block, index) => (
-            <div key={index} className="animate-in fade-in duration-500">
-              {block.title && <h3 className="text-lg font-semibold text-text-primary mb-2 leading-tight">{block.title}</h3>}
-              {block.snippet && (
-                <p className="text-[15px] text-text-secondary leading-relaxed whitespace-pre-wrap">
-                  {block.snippet}
-                </p>
-              )}
-              
-              {block.list && Array.isArray(block.list) && (
-                <ul className="list-disc pl-5 mt-3 space-y-1.5">
-                  {block.list.map((item, i) => (
-                    <li key={i} className="text-[15px] text-text-secondary leading-relaxed">
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              )}
-              
-              {block.link && (
-                <div className="mt-3">
-                  <a href={block.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-hover transition-colors">
-                    {block.link_title || block.title || 'View reference'}
-                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
-                    </svg>
-                  </a>
-                </div>
-              )}
+          {displayBlocks.map((block, index) => {
+            // Basic markdown formatter
+            const formatText = (text) => {
+              if (!text) return '';
+              return text
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-text-primary">$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em class="italic">$1</em>')
+                .replace(/`(.*?)`/g, '<code class="bg-surface-secondary px-1.5 py-0.5 rounded text-sm font-mono text-accent">$1</code>');
+            };
+
+            return (
+              <div key={index} className="animate-in fade-in duration-500">
+                {block.title && <h3 className="text-lg font-semibold text-text-primary mb-2 leading-tight" dangerouslySetInnerHTML={{ __html: formatText(block.title) }} />}
+                
+                {block.snippet && (
+                  <p 
+                    className="text-[15px] text-text-secondary leading-relaxed whitespace-pre-wrap"
+                    dangerouslySetInnerHTML={{ __html: formatText(block.snippet) }}
+                  />
+                )}
+                
+                {block.list && Array.isArray(block.list) && (
+                  <ul className="list-disc pl-5 mt-3 space-y-1.5">
+                    {block.list.map((item, i) => (
+                      <li 
+                        key={i} 
+                        className="text-[15px] text-text-secondary leading-relaxed"
+                        dangerouslySetInnerHTML={{ __html: formatText(item) }}
+                      />
+                    ))}
+                  </ul>
+                )}
+                
+                {/* Code Blocks */}
+                {block.code && (
+                  <pre className="bg-surface-secondary border border-border-subtle p-4 rounded-xl mt-3 overflow-x-auto text-sm font-mono text-text-secondary shadow-sm">
+                    <code>{block.code}</code>
+                  </pre>
+                )}
+                
+                {/* Links */}
+                {block.link && (
+                  <div className="mt-3">
+                    <a href={block.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-hover transition-colors">
+                      {block.link_title || block.title || 'View reference'}
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                      </svg>
+                    </a>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+
+          {/* Global Media for AI Overview */}
+          {(data.videos || data.images) && (
+            <div className="mt-6 pt-4 border-t border-border-subtle flex flex-wrap gap-4">
+              {Array.isArray(data.videos) && data.videos.slice(0, 2).map((vid, i) => (
+                <a key={`vid-${i}`} href={vid.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 pr-5 rounded-xl border border-border-subtle hover:bg-surface-secondary transition-colors group max-w-sm">
+                  <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-red-500/20 transition-colors">
+                    <svg className="w-6 h-6 text-red-500 pl-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="text-sm font-bold text-text-primary truncate">{vid.title || 'Watch Video'}</p>
+                    <p className="text-xs text-text-muted truncate mt-0.5">
+                      {vid.duration ? `${vid.duration} • ` : ''}{vid.source || 'YouTube'}
+                    </p>
+                  </div>
+                </a>
+              ))}
+              {Array.isArray(data.images) && data.images.slice(0, 3).map((img, i) => (
+                <a key={`img-${i}`} href={img.link} target="_blank" rel="noopener noreferrer" className="block w-24 h-24 rounded-xl overflow-hidden border border-border-subtle hover:opacity-80 transition-opacity">
+                  <img src={img.thumbnail || img.link} alt="AI Reference" className="w-full h-full object-cover" />
+                </a>
+              ))}
             </div>
-          ))}
+          )}
         </div>
 
         {hasMore && !isExpanded && (
