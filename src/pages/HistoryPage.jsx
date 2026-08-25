@@ -179,7 +179,7 @@ export default function HistoryPage() {
         message={
           modalConfig.value === 'all'
             ? "Are you sure you want to completely clear your search history? This action cannot be undone."
-            : `Are you sure you want to clear your search history for the ${modalConfig.label.toLowerCase()}?`
+            : `Are you sure you want to clear your search history for the ${modalConfig.label?.toLowerCase() || ''}?`
         }
         confirmText="Clear History"
         confirmStyle="danger"
