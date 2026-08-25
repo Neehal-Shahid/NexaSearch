@@ -197,24 +197,20 @@ export default function SearchPage() {
   const localResults = type === 'web' ? data?.local_results?.places || data?.local_results : null;
   const sportsResults = type === 'web' ? data?.sports_results : null;
 
-  // Intent Analysis Algorithm to dynamically order AND gate search packs.
-  //
-  // SerpAPI returns inline_images/inline_videos carousels for a huge range
-  // of queries (verified live: a plain "cow" search returns a real
-  // inline_videos array even though the query has no video-related words at
-  // all) — far more often than real google.com actually promotes them to a
-  // prominent block above the organic results. Scoring used to only affect
-  // *order*, not *visibility*, so any available pack got shown regardless of
-  // whether the query signaled that intent. Images/videos are now gated on a
-  // genuine keyword match; top_stories stays ungated since a news carousel
-  // is a stronger, Google-native editorial signal rather than exploratory
-  // filler, and wasn't part of what was reported as over-shown.
+  // Intent Analysis Algorithm — orders inline packs (Top Stories / Images /
+  // Videos) by keyword relevance when more than one is available, but does
+  // NOT gate whether they show at all. That was tried (2026-08-25) to stop
+  // an unrelated video pack appearing for "cow", but it also suppressed a
+  // real, legitimate inline_images pack SerpAPI returned for "nike shoes" —
+  // a query with no image-related words at all, yet a genuinely relevant
+  // product image carousel. Per explicit product direction: show whatever
+  // SerpAPI actually returns for a query, full stop — don't invent packs
+  // that aren't there, and don't hide ones that are. The "feels random/
+  // Google-like" concern this was trying to address belongs in presentation
+  // (styling), not in suppressing real data.
   const getPackOrder = () => {
     // Whole-word matching, not substring — .includes() would match "art"
-    // inside "artificial" (as in "artificial intelligence"), incorrectly
-    // signaling image intent. Now that scores gate visibility rather than
-    // just ordering, that false positive would actually show a pack for
-    // queries that clearly don't call for one.
+    // inside "artificial" (as in "artificial intelligence").
     const words = query.toLowerCase().replace(/[^a-z0-9\s]/g, '').split(/\s+/).filter(Boolean);
 
     const videoKeywords = ['video', 'videos', 'movie', 'watch', 'trailer', 'youtube', 'clip', 'stream', 'mp4'];
@@ -233,15 +229,10 @@ export default function SearchPage() {
       { id: 'inline_videos', score: videoScore + 1 }
     ];
 
-    return {
-      order: packs.sort((a, b) => b.score - a.score).map(p => p.id),
-      hasImageIntent: imageScore > 0,
-      hasVideoIntent: videoScore > 0,
-    };
+    return packs.sort((a, b) => b.score - a.score).map(p => p.id);
   };
 
-  const { order: packOrder, hasImageIntent, hasVideoIntent } =
-    type === 'web' ? getPackOrder() : { order: [], hasImageIntent: false, hasVideoIntent: false };
+  const packOrder = type === 'web' ? getPackOrder() : [];
 
   // No query provided
   if (!query) {
@@ -396,7 +387,7 @@ export default function SearchPage() {
                             );
                           }
                           
-                          if (packId === 'inline_images' && hasImageIntent && data?.inline_images && data.inline_images.length > 0) {
+                          if (packId === 'inline_images' && data?.inline_images && data.inline_images.length > 0) {
                             return (
                               <div key={packId} className="mb-8">
                                 <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
@@ -418,7 +409,7 @@ export default function SearchPage() {
                             );
                           }
 
-                          if (packId === 'inline_videos' && hasVideoIntent && data?.inline_videos && data.inline_videos.length > 0) {
+                          if (packId === 'inline_videos' && data?.inline_videos && data.inline_videos.length > 0) {
                             return (
                               <div key={packId} className="mb-8">
                                 <h2 className="text-xl font-bold text-text-primary mb-4 flex items-center gap-2">
