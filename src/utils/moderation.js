@@ -4,24 +4,43 @@ export const ADULT_KEYWORDS = [
   'anal', 'fuck', 'fucking', 'milf', 'hentai', 'bdsm', 'fetish', 'escort',
   'escorts', 'hooker', 'prostitute', 'slut', 'whore', 'masturbate', 'dildo',
   'vibrator', 'sex toy', 'sex toys', 'onlyfans', 'nsfw', 'xhamster', 'redtube',
-  'rule34', 'rule 34', 'erotica', 'incest', 'cuckold'
+  'rule34', 'rule 34', 'erotica', 'incest', 'cuckold', 'adult video', 'adult videos',
+  '18+ video', '18+ videos', 'kissing', 'breast', 'breasts', 'nipple', 'nipples'
+];
+
+export const MEDICAL_ALLOWLIST = [
+  'disease', 'diseases', 'education', 'cancer', 'health', 'anatomy', 'biology',
+  'medical', 'doctor', 'treatment', 'symptom', 'symptoms', 'virus', 'infection', 'std'
 ];
 
 export function isAdultQuery(query) {
   if (!query) return false;
-  const normalizedQuery = query.toLowerCase().replace(/[^a-z0-9\s]/g, '');
-  const words = normalizedQuery.split(/\s+/);
   
-  // Check exact word matches to avoid false positives (e.g., "Middlesex" or "Essex")
+  // Create a normalized string for phrase checking (preserves numbers, allows 18+)
+  const normalizedString = query.toLowerCase().replace(/[^a-z0-9\+\s]/g, '');
+  const words = normalizedString.split(/\s+/);
+  
+  // 1. Check for medical/educational bypass first
+  // If the query contains a medical term, we let it pass the basic keyword block
+  // (e.g. "sex diseases", "breast cancer")
+  const isMedicalContext = words.some(word => MEDICAL_ALLOWLIST.includes(word));
+  if (isMedicalContext) {
+    return false;
+  }
+
+  // 2. Check exact word matches
+  // Using exact word matches prevents flagging innocent words containing adult substrings 
+  // (e.g., "Middlesex", "Essex", "peacock")
   for (const word of words) {
     if (ADULT_KEYWORDS.includes(word)) {
       return true;
     }
   }
 
-  // Check phrase matches
+  // 3. Check phrase matches
+  // Handles multi-word keywords like "sex toys" or "18+ videos"
   for (const keyword of ADULT_KEYWORDS) {
-    if (keyword.includes(' ') && normalizedQuery.includes(keyword)) {
+    if (keyword.includes(' ') && normalizedString.includes(keyword)) {
       return true;
     }
   }

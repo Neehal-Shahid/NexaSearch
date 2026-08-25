@@ -18,6 +18,12 @@ export function formatDate(dateString) {
 
   try {
     const date = new Date(dateString);
+    
+    // If it's an invalid date (e.g. "2 hours ago" from SerpApi), just return the original string
+    if (isNaN(date.getTime())) {
+      return dateString;
+    }
+
     const now = new Date();
     const diffMs = now - date;
     const diffMins = Math.floor(diffMs / 60000);

@@ -1,20 +1,21 @@
 import SaveButton from '../ui/SaveButton';
 
-export default function ImageResultCard({ result, onClick }) {
-  const imageUrl = result.thumbnail || result.original;
+export default function ImageResultCard({ result, onClick, variant = 'default' }) {
+  // SerpApi sometimes returns high resolution versions in `original` or `thumbnail.high_resolution` (not standard, but good to check)
+  const imageUrl = result.original || result.thumbnail;
 
   return (
-    <div className="group relative rounded-lg overflow-hidden bg-surface-secondary">
+    <div className={`group relative rounded-lg overflow-hidden bg-surface-secondary ${variant === 'inline' ? 'aspect-[4/3]' : ''}`}>
       <button
         onClick={onClick}
         type="button"
-        className="w-full text-left block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset cursor-zoom-in"
+        className={`w-full text-left block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset cursor-zoom-in ${variant === 'inline' ? 'h-full' : ''}`}
       >
         <img
           src={imageUrl}
           alt={result.title || 'Search result image'}
           loading="lazy"
-          className="w-full h-auto object-cover transition-transform duration-300 group-hover:scale-[1.02]"
+          className={`w-full object-cover transition-transform duration-300 group-hover:scale-[1.02] ${variant === 'inline' ? 'h-full' : 'h-auto'}`}
           onError={(e) => {
             e.target.parentElement.parentElement.style.display = 'none';
           }}

@@ -316,7 +316,7 @@ export default function SearchPage() {
                                   </svg>
                                   Videos
                                 </h2>
-                                <VideoResultGrid results={data.inline_videos.slice(0, 3)} variant="inline" />
+                                <VideoResultGrid results={data.inline_videos.slice(0, 4)} variant="inline" />
                                 <div className="mt-4">
                                   <Link 
                                     to={`/search?q=${encodeURIComponent(query)}&type=videos&page=1`} 
