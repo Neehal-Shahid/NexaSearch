@@ -140,8 +140,8 @@ export default function NexaOverview({ data, searchContext = '', query }) {
             <div className="mt-6 pt-4 border-t border-border-subtle flex flex-wrap gap-4">
               {Array.isArray(data.videos) && data.videos.filter(Boolean).slice(0, 2).map((vid, i) => (
                 <a key={`vid-${i}`} href={vid.link} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 p-3 pr-5 rounded-xl border border-border-subtle hover:bg-surface-secondary transition-colors group max-w-sm">
-                  <div className="w-12 h-12 bg-red-500/10 rounded-lg flex items-center justify-center shrink-0 group-hover:bg-red-500/20 transition-colors">
-                    <svg className="w-6 h-6 text-red-500 pl-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                  <div className="w-12 h-12 bg-accent-light rounded-lg flex items-center justify-center shrink-0 group-hover:bg-accent/20 transition-colors">
+                    <svg className="w-6 h-6 text-accent pl-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                   </div>
                   <div className="overflow-hidden">
                     <p className="text-sm font-bold text-text-primary truncate">{typeof vid.title === 'string' ? vid.title : 'Watch Video'}</p>
