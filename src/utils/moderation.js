@@ -52,9 +52,13 @@ export const INSPIRATIONAL_QUOTES = [
   { text: "Verily, with hardship comes ease.", source: "Quran 94:5" },
   { text: "Do not lose hope, nor be sad.", source: "Quran 3:139" },
   { text: "And He found you lost and guided you.", source: "Quran 93:7" },
-  { text: "Patience is a pillar of faith.", source: "Umar ibn Al-Khattab" },
-  { text: "What is meant for you will never miss you.", source: "Imam Ali" },
-  { text: "A beautiful heart will bring things into your life that all the money in the world couldn't get you.", source: "Omar Suleiman" }
+  { text: "And do not approach unlawful sexual intercourse. Indeed, it is ever an immorality and is evil as a way.", source: "Quran 17:32" },
+  { text: "Say, 'O My servants who have transgressed against themselves [by sinning], do not despair of the mercy of Allah. Indeed, Allah forgives all sins.'", source: "Quran 39:53" },
+  { text: "Every soul will taste death. And We test you with evil and with good as trial; and to Us you will be returned.", source: "Quran 21:35" },
+  { text: "Know that the life of this world is but amusement and diversion...", source: "Quran 57:20" },
+  { text: "O mankind, indeed the promise of Allah is truth, so let not the worldly life delude you...", source: "Quran 35:5" },
+  { text: "And whoever turns away from My remembrance - indeed, he will have a depressed life.", source: "Quran 20:124" },
+  { text: "Return to your Lord, well-pleased and pleasing [to Him].", source: "Quran 89:28" }
 ];
 
 export function getRandomQuote() {
