@@ -23,7 +23,12 @@ export default function NexaOverview({ data, searchContext = '', query }) {
     if (!inputValue.trim()) return;
 
     const userMessage = inputValue.trim();
-    const initialText = blocks.map(b => (b.title ? `**${b.title}**\n${b.snippet}` : b.snippet)).join('\n\n');
+    const initialText = blocks.map(b => {
+      let text = b.title ? `**${b.title}**\n` : '';
+      if (b.snippet) text += `${b.snippet}\n`;
+      if (b.list && Array.isArray(b.list)) text += b.list.map(i => `- ${i}`).join('\n');
+      return text.trim();
+    }).filter(Boolean).join('\n\n');
     
     // Redirect to AI tab and pass initial context and user question
     navigate(`/search?q=${encodeURIComponent(query || searchParams.get('q'))}&type=ai`, {
@@ -52,9 +57,32 @@ export default function NexaOverview({ data, searchContext = '', query }) {
           {displayBlocks.map((block, index) => (
             <div key={index} className="animate-in fade-in duration-500">
               {block.title && <h3 className="text-lg font-semibold text-text-primary mb-2 leading-tight">{block.title}</h3>}
-              <p className="text-[15px] text-text-secondary leading-relaxed whitespace-pre-wrap">
-                {block.snippet}
-              </p>
+              {block.snippet && (
+                <p className="text-[15px] text-text-secondary leading-relaxed whitespace-pre-wrap">
+                  {block.snippet}
+                </p>
+              )}
+              
+              {block.list && Array.isArray(block.list) && (
+                <ul className="list-disc pl-5 mt-3 space-y-1.5">
+                  {block.list.map((item, i) => (
+                    <li key={i} className="text-[15px] text-text-secondary leading-relaxed">
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              
+              {block.link && (
+                <div className="mt-3">
+                  <a href={block.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-hover transition-colors">
+                    {block.link_title || block.title || 'View reference'}
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
+                    </svg>
+                  </a>
+                </div>
+              )}
             </div>
           ))}
         </div>
