@@ -57,8 +57,19 @@ export default function NexaOverview({ data, searchContext = '', query }) {
           {displayBlocks.map((block, index) => {
             // Basic markdown formatter
             const formatText = (text) => {
-              if (!text) return '';
-              return text
+              if (text == null) return '';
+              let str = '';
+              if (typeof text === 'string') {
+                str = text;
+              } else if (typeof text === 'object') {
+                str = text.text || text.snippet || text.title || '';
+              } else {
+                str = String(text);
+              }
+              
+              if (!str || str === '[object Object]') return '';
+              
+              return str
                 .replace(/</g, '&lt;')
                 .replace(/>/g, '&gt;')
                 .replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold text-text-primary">$1</strong>')
@@ -92,7 +103,7 @@ export default function NexaOverview({ data, searchContext = '', query }) {
                 {/* Code Blocks */}
                 {block.code && (
                   <pre className="bg-surface-secondary border border-border-subtle p-4 rounded-xl mt-3 overflow-x-auto text-sm font-mono text-text-secondary shadow-sm">
-                    <code>{block.code}</code>
+                    <code>{typeof block.code === 'string' ? block.code : JSON.stringify(block.code, null, 2)}</code>
                   </pre>
                 )}
                 
@@ -100,7 +111,7 @@ export default function NexaOverview({ data, searchContext = '', query }) {
                 {block.link && (
                   <div className="mt-3">
                     <a href={block.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent hover:text-accent-hover transition-colors">
-                      {block.link_title || block.title || 'View reference'}
+                      {typeof block.link_title === 'string' ? block.link_title : (typeof block.title === 'string' ? block.title : 'View reference')}
                       <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 6H5.25A2.25 2.25 0 003 8.25v10.5A2.25 2.25 0 005.25 21h10.5A2.25 2.25 0 0018 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25" />
                       </svg>
@@ -120,9 +131,9 @@ export default function NexaOverview({ data, searchContext = '', query }) {
                     <svg className="w-6 h-6 text-red-500 pl-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
                   </div>
                   <div className="overflow-hidden">
-                    <p className="text-sm font-bold text-text-primary truncate">{vid.title || 'Watch Video'}</p>
+                    <p className="text-sm font-bold text-text-primary truncate">{typeof vid.title === 'string' ? vid.title : 'Watch Video'}</p>
                     <p className="text-xs text-text-muted truncate mt-0.5">
-                      {vid.duration ? `${vid.duration} • ` : ''}{vid.source || 'YouTube'}
+                      {typeof vid.duration === 'string' ? `${vid.duration} • ` : ''}{typeof vid.source === 'string' ? vid.source : 'YouTube'}
                     </p>
                   </div>
                 </a>
