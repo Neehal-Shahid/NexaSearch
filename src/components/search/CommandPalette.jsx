@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { useSearchHistory } from '../../context/SearchHistoryContext';
 import { useTrendingSearches } from '../../hooks/useTrendingSearches';
 
+// Deliberately excludes /admin — this palette is visible to every visitor
+// via a global keyboard shortcut, and the admin dashboard shouldn't be
+// advertised to normal users even though it's password-gated behind that
+// link. Anyone who needs it knows the URL already.
 const NAV_ITEMS = [
   { id: 'nav-home', label: 'Home', path: '/' },
   { id: 'nav-saved', label: 'Saved Results', path: '/saved' },
@@ -10,7 +14,6 @@ const NAV_ITEMS = [
   { id: 'nav-about', label: 'About', path: '/about' },
   { id: 'nav-privacy', label: 'Privacy Policy', path: '/privacy' },
   { id: 'nav-terms', label: 'Terms of Service', path: '/terms' },
-  { id: 'nav-admin', label: 'Admin Dashboard', path: '/admin' },
 ];
 
 const ClockIcon = () => (

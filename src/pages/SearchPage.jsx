@@ -107,11 +107,26 @@ export default function SearchPage() {
     setAiOverviewData(null);
   }, [query, type, page]);
 
+  // Deliberately depends on [data] only, NOT [type] — this was the actual
+  // remaining bug reported after the fix above: `type` flips to 'web'
+  // immediately on navigation, but `data` (from useSearch) still holds the
+  // PREVIOUS type/query's response until the new fetch resolves. Including
+  // `type` here meant this effect re-ran the instant `type` changed, while
+  // `data` was still stale — and since the previous AI-mode fetch for the
+  // SAME query also has a valid ai_overview (same underlying Google
+  // response, just fetched under type=ai), that condition was true, so it
+  // immediately re-attached the stale overview in the SAME render pass as
+  // the reset above, undoing it before it was ever visible. `data` only
+  // ever changes as a result of a [query, type, page] change already having
+  // happened (see useSearch.js), so by the time THIS effect actually runs,
+  // `type` read from the closure is already current — no staleness risk
+  // from omitting it here, only from including it.
   useEffect(() => {
     if (type === 'web' && data?.ai_overview?.text_blocks) {
       setAiOverviewData(data.ai_overview);
     }
-  }, [data, type]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
 
   // Determine which results to show based on search type
   const getResults = () => {
