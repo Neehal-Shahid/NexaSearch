@@ -6,6 +6,14 @@ import { isRateLimited, getClientIp } from './_lib/rateLimit.js';
 const SERPAPI_BASE = 'https://serpapi.com/search.json';
 const MAX_QUERY_LENGTH = 200;
 
+async function fetchSerp(params) {
+  const response = await fetch(`${SERPAPI_BASE}?${params.toString()}`);
+  if (response.ok) {
+    return { ok: true, data: await response.json() };
+  }
+  return { ok: false, status: response.status, errorText: await response.text() };
+}
+
 const ENGINE_MAP = {
   web: 'google',
   images: 'google_images',
@@ -100,25 +108,35 @@ export default async function handler(req, res) {
     }
 
     try {
-      const response = await fetch(`${SERPAPI_BASE}?${params.toString()}`);
+      let result = await fetchSerp(params);
 
-      if (response.ok) {
-        const data = await response.json();
-        // Set cache headers — cache for 5 minutes to reduce duplicate requests
-        res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
-        return res.status(200).json(data);
+      // Some engines support a much narrower set of `gl` country codes than
+      // others — verified live: google_shopping rejects gl=pk with a 400
+      // ("Unsupported `pk` country - gl parameter.") even though the same
+      // visitor's web/images/news searches work fine with it. Retry once
+      // without gl/location rather than failing the whole request for
+      // visitors in a country the engine doesn't support.
+      if (!result.ok && result.status === 400 && params.has('gl') && /unsupported .*gl parameter/i.test(result.errorText)) {
+        params.delete('gl');
+        params.delete('location');
+        result = await fetchSerp(params);
       }
 
-      const errorText = await response.text();
-      console.error(`SerpAPI error ${response.status}:`, errorText);
+      if (result.ok) {
+        // Set cache headers — cache for 5 minutes to reduce duplicate requests
+        res.setHeader('Cache-Control', 's-maxage=300, stale-while-revalidate=600');
+        return res.status(200).json(result.data);
+      }
+
+      console.error(`SerpAPI error ${result.status}:`, result.errorText);
 
       // If quota exceeded, try the next key
-      if (response.status === 429 || response.status === 402) {
+      if (result.status === 429 || result.status === 402) {
         continue;
       }
 
       // If it's a different error, stop immediately
-      return res.status(response.status).json({ error: 'Search request failed' });
+      return res.status(result.status).json({ error: 'Search request failed' });
     } catch (error) {
       console.error('SerpAPI fetch error:', error);
       break;
